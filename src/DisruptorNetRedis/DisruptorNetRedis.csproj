@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <Version>0.1.0</Version>
+    <Authors>Anton Delsink</Authors>
+    <Company>Anton Delsink</Company>
+    <Description>Redis server written in C# for .NET Core 2, using the .NET port of the LMAX Disruptor.</Description>
+    <Copyright>Anton Delsink</Copyright>
+    <PackageTags>Redis; CSharp; Disruptor</PackageTags>
+    <PackageReleaseNotes>This Initial release includes only the limited Redis commands necessary to get the clients working for performance testing. Clients include redis-cli, redis-benchmark, and StackExchange.Redis.</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Disruptor" Version="3.3.6" />
+  </ItemGroup>
+
+</Project>
