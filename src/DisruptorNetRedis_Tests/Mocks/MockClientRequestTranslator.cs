@@ -10,13 +10,20 @@ namespace DisruptorNetRedis
 {
     internal class MockClientRequestTranslator : IEventTranslatorTwoArg<RingBufferSlot, ClientSession, List<byte[]>>
     {
+        private RedisCommandDefinitions _commands;
+
+        public MockClientRequestTranslator(RedisCommandDefinitions commands)
+        {
+            _commands = commands;
+        }
+
         public long? LastSeenSequenceNumber { get; private set; } = null;
 
         public void TranslateTo(RingBufferSlot slot, long sequence, ClientSession session, List<byte[]> data)
         {
             slot.Session = session;
             slot.Data = data;
-            slot.RedisCommand = RedisCommandDefinitions.GetCommand(slot.Data);
+            slot.Command = _commands.GetCommand(slot.Data);
 
             this.LastSeenSequenceNumber = sequence;
         }

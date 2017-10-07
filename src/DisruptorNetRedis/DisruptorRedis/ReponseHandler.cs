@@ -11,8 +11,6 @@ namespace DisruptorNetRedis.DisruptorRedis
             if (slot.Response == null)
                 return;
 
-            Debug.WriteLine(nameof(ResponseHandler) + " responded with " + Encoding.UTF8.GetString(slot.Response).Replace("\r\n", "|"));
-
             try
             {
                 slot.Session?.ClientDataStream?.Write(slot.Response, 0, slot.Response.Length);

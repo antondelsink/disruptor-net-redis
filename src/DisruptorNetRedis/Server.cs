@@ -14,13 +14,14 @@ namespace DisruptorNetRedis
 
         public Server(IPEndPoint listenOn)
         {
-            var _core = new DotNetRedis.DotNetRedisCore();
+            var _core = new DotNetRedis.DotNetRedisServer();
             var _dbStrings = new Databases.StringsDatabase();
+            var _commands = new RedisCommandDefinitions(_core, _dbStrings);
 
             _DisruptorRedis =
                 new DisruptorRedis.DisruptorRedis(
-                    new ClientRequestTranslator(),
-                    new ClientRequestHandler(_core, _dbStrings),
+                    new ClientRequestTranslator(_commands),
+                    new ClientRequestHandler(),
                     new IWorkHandler<RingBufferSlot>[] { new ResponseHandler() });
 
             _SessionManager = new SessionManager(listenOn);

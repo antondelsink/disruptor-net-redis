@@ -7,6 +7,7 @@ using DisruptorNetRedis.Tests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace DisruptorNetRedis.LongRunningTests
@@ -22,10 +23,11 @@ namespace DisruptorNetRedis.LongRunningTests
 
         private static List<List<byte[]>> dataArray = new List<List<byte[]>>();
 
-        private static DotNetRedisCore _core = new DotNetRedisCore();
+        private static DotNetRedisServer _core = new DotNetRedisServer();
         private static StringsDatabase _strings = new StringsDatabase();
+        private static RedisCommandDefinitions _commands = new RedisCommandDefinitions(_core, _strings);
         private static MockResponseHandler _commandLogger = new MockResponseHandler();
-        private static MockClientRequestTranslator _translator = new MockClientRequestTranslator();
+        private static MockClientRequestTranslator _translator = new MockClientRequestTranslator(_commands);
 
         [ClassInitialize]
         public static void Class_Init(TestContext ctx)
@@ -34,7 +36,7 @@ namespace DisruptorNetRedis.LongRunningTests
 
             _dnr = new DisruptorRedis.DisruptorRedis(
                 _translator,
-                new ClientRequestHandler(_core, _strings),
+                new ClientRequestHandler(),
                 new IWorkHandler<RingBufferSlot>[] { _commandLogger });
 
             _dnr.Start();
@@ -55,10 +57,12 @@ namespace DisruptorNetRedis.LongRunningTests
                 RemoteEndPoint = null
             };
 
+            var sw = Stopwatch.StartNew();
             foreach (var req in dataArray)
             {
                 _dnr.OnDataAvailable(session, req);
             }
+            sw.Stop();
 
             AssertWithTimeout.IsTrue(() => ITERATIONS == (ulong)_strings.StringsDictionary.Count, "TOO SLOW!", TimeSpan.FromMilliseconds(1_000));
         }

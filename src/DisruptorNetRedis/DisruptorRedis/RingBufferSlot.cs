@@ -1,4 +1,5 @@
 ﻿using DisruptorNetRedis.Networking;
+using System;
 using System.Collections.Generic;
 
 namespace DisruptorNetRedis.DisruptorRedis
@@ -7,7 +8,7 @@ namespace DisruptorNetRedis.DisruptorRedis
     {
         public ClientSession Session = null;
 
-        public RedisCommands RedisCommand;
+        public Func<List<byte[]>, byte[]> Command;
         public List<byte[]> Data;
 
         public byte[] Response = null;
