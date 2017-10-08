@@ -10,7 +10,7 @@ namespace DisruptorNetRedis
 
         public const string OK = "OK";
         public const string OK_SimpleString = "+" + OK + "\r\n";
-        public static byte[] OK_Binary = Encoding.UTF8.GetBytes(OK_SimpleString);
+        public static byte[] OK_SimpleStringAsByteArray = Encoding.UTF8.GetBytes(OK_SimpleString);
 
         public const string ERR = "ERR";
         public const string ERR_SimpleString = "-" + ERR + "\r\n";

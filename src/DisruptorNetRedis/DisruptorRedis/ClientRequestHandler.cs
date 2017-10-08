@@ -1,5 +1,4 @@
 ﻿using Disruptor;
-using System;
 
 namespace DisruptorNetRedis.DisruptorRedis
 {

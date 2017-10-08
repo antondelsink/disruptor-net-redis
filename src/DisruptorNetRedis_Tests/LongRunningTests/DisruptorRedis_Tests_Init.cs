@@ -21,6 +21,7 @@ namespace DisruptorNetRedis.LongRunningTests
         {
             var _core = new DotNetRedisServer();
             var _dbStrings = new StringsDatabase();
+            var _dbLists = new ListsDatabase();
 
             var session = new ClientSession()
             {
@@ -28,7 +29,7 @@ namespace DisruptorNetRedis.LongRunningTests
                 RemoteEndPoint = null
             };
 
-            var _commands = new RedisCommandDefinitions(_core, _dbStrings);
+            var _commands = new RedisCommandDefinitions(_core, _dbStrings, _dbLists);
             var _translator = new MockClientRequestTranslator(_commands);
 
             using (var dnr = new DisruptorRedis.DisruptorRedis(

@@ -5,7 +5,7 @@
 
     <IsPackable>false</IsPackable>
 
-    <RootNamespace>DNR.Tests</RootNamespace>
+    <RootNamespace>DisruptorNetRedis.Tests</RootNamespace>
 
     <Version>0.1.0</Version>
 

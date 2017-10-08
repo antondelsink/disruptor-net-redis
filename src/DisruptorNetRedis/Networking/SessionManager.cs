@@ -94,6 +94,7 @@ namespace DisruptorNetRedis.Networking
                         else
                         {
                             var ns = (NetworkStream)s.ClientDataStream;
+
                             if (ns.DataAvailable)
                             {
                                 try
@@ -103,11 +104,11 @@ namespace DisruptorNetRedis.Networking
                                     if (data != null)
                                         DataAvailable?.Invoke(s, data);
                                 }
-                                catch (System.IO.EndOfStreamException)
+                                catch (System.Net.ProtocolViolationException)
                                 {
                                     s.ClientDataStream = null;
                                 }
-                                catch (System.Net.ProtocolViolationException)
+                                catch (System.IO.IOException)
                                 {
                                     s.ClientDataStream = null;
                                 }

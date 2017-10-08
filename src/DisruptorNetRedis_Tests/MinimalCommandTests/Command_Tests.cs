@@ -16,21 +16,15 @@ namespace DisruptorNetRedis.Tests
         private DotNetRedisServer _core = null;
         private StringsDatabase _dbStrings = null;
         private RedisCommandDefinitions _commands = null;
+        private ListsDatabase _dbLists = null;
 
         [TestInitialize]
         public void Test_Init()
         {
             _core = new DotNetRedisServer();
             _dbStrings = new StringsDatabase();
-            _commands = new RedisCommandDefinitions(_core, _dbStrings);
-        }
-
-        [TestCleanup]
-        public void Test_Cleanup()
-        {
-            _core = null;
-            _dbStrings = null;
-            _commands = null;
+            _dbLists = new ListsDatabase();
+            _commands = new RedisCommandDefinitions(_core, _dbStrings, _dbLists);
         }
 
         [TestMethod]
@@ -52,6 +46,9 @@ namespace DisruptorNetRedis.Tests
             Check.That<byte[]>(response).ContainsExactly(Encoding.UTF8.GetBytes(msgResponse));
         }
 
+        /// <summary>
+        /// https://redis.io/commands/lpush
+        /// </summary>
         [TestMethod]
         public void Test_Command_LPUSH()
         {
@@ -69,7 +66,36 @@ namespace DisruptorNetRedis.Tests
             var cmd = _commands.GetCommand(data);
             var response = cmd(data);
 
-            Check.That<byte[]>(response).ContainsExactly(Constants.OK_Binary);
+            Check.That<byte[]>(response).ContainsExactly(Constants.OK_SimpleStringAsByteArray);
+        }
+
+        /// <summary>
+        /// https://redis.io/commands/lrange
+        /// </summary>
+        [TestMethod]
+        public void Test_Command_LRANGE()
+        {
+            var key = new RedisKey("key");
+            var vals = new RedisValue[] { "a", "b", "c" };
+
+            _dbLists.LPush(key, vals);
+
+            var msg =
+                RESP.AsRedisArray(
+                    RESP.AsRedisBulkString("LRANGE"),
+                    RESP.AsRedisBulkString("key"),
+                    RESP.AsRedisBulkString("1"),
+                    RESP.AsRedisBulkString("2"));
+
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(msg));
+            stream.Seek(0, SeekOrigin.Begin);
+
+            RESP.ReadOneArray(stream, out List<byte[]> data);
+
+            var cmd = _commands.GetCommand(data);
+            var response = cmd(data);
+
+            Check.That<byte[]>(response).ContainsExactly(Encoding.UTF8.GetBytes(RESP.AsRedisArray(RESP.AsRedisBulkString("b"),RESP.AsRedisBulkString("a"))));
         }
 
         [TestMethod]

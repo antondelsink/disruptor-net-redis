@@ -14,9 +14,11 @@ namespace DisruptorNetRedis
 
         public Server(IPEndPoint listenOn)
         {
-            var _core = new DotNetRedis.DotNetRedisServer();
-            var _dbStrings = new Databases.StringsDatabase();
-            var _commands = new RedisCommandDefinitions(_core, _dbStrings);
+            var _commands = 
+                new RedisCommandDefinitions(
+                    new DotNetRedis.DotNetRedisServer(),
+                    new Databases.StringsDatabase(),
+                    new Databases.ListsDatabase());
 
             _DisruptorRedis =
                 new DisruptorRedis.DisruptorRedis(

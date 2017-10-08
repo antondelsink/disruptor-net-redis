@@ -19,6 +19,19 @@ namespace DisruptorNetRedis
             return arr;
         }
 
+        public static byte[] ToRedisArrayAsByteArray(params RedisValue[] lst)
+        {
+            string prefix = "*" + lst.Length.ToString() + Environment.NewLine;
+
+            IEnumerable<byte> result = Encoding.UTF8.GetBytes(prefix);
+
+            foreach (RedisValue element in lst)
+            {
+                result = Enumerable.Concat<byte>(result, element.ToRedisBulkStringByteArray());
+            }
+            return result.ToArray();
+        }
+
         public static string AsRedisBulkString(string s)
         {
             return "$" + s.Length.ToString() + Environment.NewLine + s + Environment.NewLine;

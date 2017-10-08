@@ -2,7 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NFluent;
 
-namespace DisruptorNetRedis.Tests
+namespace DisruptorNetRedis.Tests.Databases
 {
     [TestClass]
     public class StringsDatabase_Tests
@@ -13,12 +13,6 @@ namespace DisruptorNetRedis.Tests
         public void Test_Init()
         {
             _rs = new StringsDatabase();
-        }
-
-        [TestCleanup]
-        public void Test_Cleanup()
-        {
-            _rs = null;
         }
 
         [TestMethod]

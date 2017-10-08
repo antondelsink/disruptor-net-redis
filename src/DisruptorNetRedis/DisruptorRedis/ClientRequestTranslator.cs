@@ -1,6 +1,5 @@
 ﻿using Disruptor;
 using DisruptorNetRedis.Networking;
-using System;
 using System.Collections.Generic;
 
 namespace DisruptorNetRedis.DisruptorRedis
@@ -19,6 +18,7 @@ namespace DisruptorNetRedis.DisruptorRedis
             slot.Session = session;
 
             slot.Data = data;
+
             slot.Command = _commands.GetCommand(slot.Data);
         }
     }
