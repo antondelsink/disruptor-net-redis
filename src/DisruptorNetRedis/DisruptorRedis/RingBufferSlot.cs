@@ -6,11 +6,14 @@ namespace DisruptorNetRedis.DisruptorRedis
 {
     internal class RingBufferSlot
     {
-        public ClientSession Session = null;
-
-        public Func<List<byte[]>, byte[]> Command;
+        // populated by Translator
+        public ClientSession Session = null; 
         public List<byte[]> Data;
 
+        // Populated by ClientRequestParser
+        public Func<List<byte[]>, byte[]> Command;
+
+        // populated by ResponseHandler
         public byte[] Response = null;
     }
 }

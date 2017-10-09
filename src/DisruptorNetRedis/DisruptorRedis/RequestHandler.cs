@@ -2,7 +2,7 @@
 
 namespace DisruptorNetRedis.DisruptorRedis
 {
-    internal class ClientRequestHandler : IEventHandler<RingBufferSlot>
+    internal class RequestHandler : IEventHandler<RingBufferSlot>
     {
         public void OnEvent(RingBufferSlot slot, long sequence, bool endOfBatch)
         {

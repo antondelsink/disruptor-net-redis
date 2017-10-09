@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DisruptorNetRedis.DisruptorRedis
 {
-    internal class ResponseHandler : IWorkHandler<RingBufferSlot>
+    internal class ClientResponseHandler : IWorkHandler<RingBufferSlot>
     {
         public void OnEvent(RingBufferSlot slot)
         {

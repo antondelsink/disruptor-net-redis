@@ -17,7 +17,7 @@ namespace DisruptorNetRedis.LongRunningTests
     public class DisruptorRedis_Tests_Init
     {
         [TestMethod]
-        public void Test_DNR_Init()
+        public void Test_DisruptorRedis_Init()
         {
             var _core = new DotNetRedisServer();
             var _dbStrings = new StringsDatabase();
@@ -30,11 +30,12 @@ namespace DisruptorNetRedis.LongRunningTests
             };
 
             var _commands = new RedisCommandDefinitions(_core, _dbStrings, _dbLists);
-            var _translator = new MockClientRequestTranslator(_commands);
+            var _translator = new MockClientRequestTranslator();
 
             using (var dnr = new DisruptorRedis.DisruptorRedis(
                 _translator,
-                new ClientRequestHandler(),
+                new RequestParser(_commands),
+                new RequestHandler(),
                 new IWorkHandler<RingBufferSlot>[] { new MockResponseHandler() }))
             {
                 dnr.Start();

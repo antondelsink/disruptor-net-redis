@@ -15,7 +15,7 @@ namespace DisruptorNetRedis.Networking
 
         private ConcurrentBag<ClientSession> _sessions = new ConcurrentBag<ClientSession>();
 
-        internal event Action<ClientSession, List<byte[]>> DataAvailable;
+        internal event Action<ClientSession, List<byte[]>> OnDataAvailable;
 
         public SessionManager(IPEndPoint listenOn)
         {
@@ -102,7 +102,7 @@ namespace DisruptorNetRedis.Networking
                                     RESP.ReadOneArray(ns, out List<byte[]> data);
 
                                     if (data != null)
-                                        DataAvailable?.Invoke(s, data);
+                                        OnDataAvailable?.Invoke(s, data);
                                 }
                                 catch (System.Net.ProtocolViolationException)
                                 {

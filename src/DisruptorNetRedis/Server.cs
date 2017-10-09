@@ -22,13 +22,14 @@ namespace DisruptorNetRedis
 
             _DisruptorRedis =
                 new DisruptorRedis.DisruptorRedis(
-                    new ClientRequestTranslator(_commands),
-                    new ClientRequestHandler(),
-                    new IWorkHandler<RingBufferSlot>[] { new ResponseHandler() });
+                    new RequestTranslator(),
+                    new RequestParser(_commands),
+                    new RequestHandler(),
+                    new IWorkHandler<RingBufferSlot>[] { new ClientResponseHandler() });
 
             _SessionManager = new SessionManager(listenOn);
 
-            _SessionManager.DataAvailable += _DisruptorRedis.OnDataAvailable;
+            _SessionManager.OnDataAvailable += _DisruptorRedis.OnDataAvailable;
         }
 
         public void Start()

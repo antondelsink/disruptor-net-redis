@@ -29,7 +29,8 @@ namespace DisruptorNetRedis.LongRunningTests
 
         private static RedisCommandDefinitions _commands = new RedisCommandDefinitions(_core, _strings, _dbLists);
         private static MockResponseHandler _commandLogger = new MockResponseHandler();
-        private static MockClientRequestTranslator _translator = new MockClientRequestTranslator(_commands);
+        private static MockClientRequestTranslator _translator = new MockClientRequestTranslator();
+        private static RequestParser _parser = new RequestParser(_commands);
 
         [ClassInitialize]
         public static void Class_Init(TestContext ctx)
@@ -38,7 +39,8 @@ namespace DisruptorNetRedis.LongRunningTests
 
             _dnr = new DisruptorRedis.DisruptorRedis(
                 _translator,
-                new ClientRequestHandler(),
+                _parser,
+                new RequestHandler(),
                 new IWorkHandler<RingBufferSlot>[] { _commandLogger });
 
             _dnr.Start();
