@@ -9,7 +9,6 @@ namespace DisruptorNetRedis.DisruptorRedis
         public void TranslateTo(RingBufferSlot slot, long sequence, ClientSession session, List<byte[]> data)
         {
             slot.Session = session;
-
             slot.Data = data;
         }
     }

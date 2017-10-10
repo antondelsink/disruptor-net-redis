@@ -13,7 +13,9 @@ namespace DisruptorNetRedis
         private StringsDatabase _dbStrings = null;
         private ListsDatabase _dbLists = null;
 
-        private Func<List<byte[]>, Func<List<byte[]>, byte[]>>[] _knownCommands = null;
+        private SortedDictionary<string, Func<List<byte[]>, byte[]>> _commands = null;
+
+        private Func<List<byte[]>, Func<List<byte[]>, byte[]>>[] _commonCommands = null;
 
         public RedisCommandDefinitions(DotNetRedisServer core, StringsDatabase dbStrings, ListsDatabase dbLists)
         {
@@ -21,22 +23,46 @@ namespace DisruptorNetRedis
             _dbStrings = dbStrings;
             _dbLists = dbLists;
 
-            _knownCommands = new Func<List<byte[]>, Func<List<byte[]>, byte[]>>[]
+            _commonCommands = new Func<List<byte[]>, Func<List<byte[]>, byte[]>>[]
             {
+                new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_GET(d) ? new Func<List<byte[]>, byte[]>(Invoke_GET) : null),
                 new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_SET(d) ? new Func<List<byte[]>, byte[]>(Invoke_SET) : null),
-                new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_GET(d) ? new Func<List<byte[]>, byte[]>(Invoke_GET): null),
 
-                new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_LPUSH(d) ? new Func<List<byte[]>, byte[]>(Invoke_LPUSH): null),
-                new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_RPUSH(d) ? new Func<List<byte[]>, byte[]>(Invoke_RPUSH): null),
-                new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_LRANGE(d) ? new Func<List<byte[]>, byte[]>(Invoke_LRANGE): null),
+                new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_LPUSH(d) ? new Func<List<byte[]>, byte[]>(Invoke_LPUSH) : null),
+                new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_RPUSH(d) ? new Func<List<byte[]>, byte[]>(Invoke_RPUSH) : null),
+                new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_LRANGE(d) ? new Func<List<byte[]>, byte[]>(Invoke_LRANGE) : null),
 
                 new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_PING(d) ? new Func<List<byte[]>, byte[]>(Invoke_PING) : null),
                 new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_ECHO(d) ? new Func<List<byte[]>, byte[]>(Invoke_ECHO) : null),
-                new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_INFO(d) ? new Func<List<byte[]>, byte[]>(Invoke_INFO): null),
-                new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_COMMAND(d) ? new Func<List<byte[]>, byte[]>(Invoke_COMMAND) : null),
-                new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_SUBSCRIBE(d) ? new Func<List<byte[]>, byte[]>(Invoke_SUBSCRIBE) : null),
                 new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_CLIENT_SETNAME(d) ? new Func<List<byte[]>, byte[]>(Invoke_CLIENT_SETNAME) : null),
             };
+
+            _commands = new SortedDictionary<string, Func<List<byte[]>, byte[]>>()
+            {
+                { "INFO", Invoke_INFO},
+                { "COMMAND", Invoke_COMMAND },
+                { "SUBSCRIBE", Invoke_SUBSCRIBE}
+            };
+        }
+
+        public Func<List<byte[]>, byte[]> GetCommand(List<byte[]> data)
+        {
+            // TODO: Test/Profile and aim for zero allocations...
+
+            Func<List<byte[]>, byte[]> selectedCommand = null;
+            foreach (var eval in _commonCommands)
+            {
+                selectedCommand = eval(data);
+
+                if (selectedCommand != null)
+                    return selectedCommand;
+            }
+
+            string cmd = Encoding.UTF8.GetString(data[0]).ToUpper();
+            if (_commands.ContainsKey(cmd))
+                return _commands[cmd];
+
+            return Invoke_UnknownCommandError;
         }
 
         private byte[] Invoke_LRANGE(List<byte[]> data)
@@ -99,19 +125,7 @@ namespace DisruptorNetRedis
                 Encoding.UTF8.GetString(data[0]).ToUpper() == "LPUSH";
         }
 
-        public Func<List<byte[]>, byte[]> GetCommand(List<byte[]> data)
-        {
-            Func<List<byte[]>, byte[]> selectedCommand = null;
-            foreach (var eval in _knownCommands)
-            {
-                selectedCommand = eval(data);
 
-                if (selectedCommand != null)
-                    return selectedCommand;
-            }
-
-            return Invoke_UnknownCommandError;
-        }
 
         private byte[] Invoke_UnknownCommandError(List<byte[]> data)
         {
@@ -229,7 +243,7 @@ namespace DisruptorNetRedis
         {
             if (data.Count == 2)
                 return RESP.AsRedisBulkString(data[1]);
-            else 
+            else
                 return Constants.PONG_SimpleStringAsBinary;
         }
         public byte[] Invoke_GET(List<byte[]> data)

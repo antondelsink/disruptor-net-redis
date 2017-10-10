@@ -67,6 +67,7 @@ namespace DisruptorNetRedis.LongRunningTests
                 _dnr.OnDataAvailable(session, req);
             }
             sw.Stop();
+            Debug.WriteLine($"stopwatch: {sw.ElapsedMilliseconds.ToString()}ms");
 
             AssertWithTimeout.IsTrue(() => ITERATIONS == (ulong)_strings.StringsDictionary.Count, "TOO SLOW!", TimeSpan.FromMilliseconds(1_000));
         }

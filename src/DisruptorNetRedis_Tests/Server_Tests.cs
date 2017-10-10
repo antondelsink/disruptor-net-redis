@@ -23,6 +23,9 @@ namespace DisruptorNetRedis.LongRunningTests
             }
         }
 
+        /// <summary>
+        /// For running redis-benchmark.exe -p 55001 -P 100 -c 50 -n 100000 -t SET,GET
+        /// </summary>
         [TestMethod]
         public void Test_Server_Run5mins()
         {

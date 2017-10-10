@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace DisruptorNetRedis.Networking
 {
@@ -34,9 +35,10 @@ namespace DisruptorNetRedis.Networking
             if (_tcpListener == null)
                 throw new InvalidOperationException();
 
-            _tcpListener.Start();
+            _tcpListener.Start(512);
             _tcpListener.AcceptSocketAsync().ContinueWith(OnTcpSocketAccept);
         }
+
         public void Shutdown()
         {
             Dispose();
@@ -59,6 +61,7 @@ namespace DisruptorNetRedis.Networking
 
             AcceptSocketAsync();
         }
+
 
         private void AcceptSocketAsync()
         {
@@ -88,36 +91,32 @@ namespace DisruptorNetRedis.Networking
                     foreach (var s in localSessions)
                     {
                         if (s.ClientDataStream == null)
-                        {
-                            // TODO: change _sessions to Concurrent-?
-                        }
-                        else
+                            continue;
+
+                        try
                         {
                             var ns = (NetworkStream)s.ClientDataStream;
-
                             if (ns.DataAvailable)
                             {
-                                try
-                                {
-                                    RESP.ReadOneArray(ns, out List<byte[]> data);
+                                RESP.ReadOneArray(ns, out List<byte[]> data);
 
-                                    if (data != null)
-                                        OnDataAvailable?.Invoke(s, data);
-                                }
-                                catch (System.Net.ProtocolViolationException)
-                                {
-                                    s.ClientDataStream = null;
-                                }
-                                catch (System.IO.IOException)
-                                {
-                                    s.ClientDataStream = null;
-                                }
+                                if (data != null)
+                                    OnDataAvailable?.Invoke(s, data);
                             }
                         }
+                        catch (System.Net.ProtocolViolationException)
+                        {
+                            s.ClientDataStream = null;
+                        }
+                        catch (System.IO.IOException)
+                        {
+                            s.ClientDataStream = null;
+                        }
+
                     }
                 }
-                Thread.Yield();
             }
+            Thread.Yield();
         }
     }
 }
