@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.IO;
 
 namespace DisruptorNetRedis.Networking
 {
@@ -16,18 +17,19 @@ namespace DisruptorNetRedis.Networking
 
         private ConcurrentBag<ClientSession> _sessions = new ConcurrentBag<ClientSession>();
 
+        private Thread _backgroundThread = null;
+
         internal event Action<ClientSession, List<byte[]>> OnDataAvailable;
 
         public SessionManager(IPEndPoint listenOn)
         {
             _tcpListener = new TcpListener(listenOn);
 
-            var _backgroundThread = new Thread(new ThreadStart(MonitorNetworkStreams))
+            _backgroundThread = new Thread(new ThreadStart(MonitorNetworkStreams))
             {
                 Name = $"Network Socket Monitoring Thread",
                 IsBackground = true
             };
-            _backgroundThread.Start();
         }
 
         public void Start()
@@ -36,13 +38,17 @@ namespace DisruptorNetRedis.Networking
                 throw new InvalidOperationException();
 
             _tcpListener.Start(512);
-            _tcpListener.AcceptSocketAsync().ContinueWith(OnTcpSocketAccept);
+
+            AcceptSocketAsync();
+
+            _backgroundThread.Start();
         }
 
         public void Shutdown()
         {
             Dispose();
         }
+
         public void Dispose()
         {
             _tcpListener?.Stop();
@@ -54,6 +60,11 @@ namespace DisruptorNetRedis.Networking
             GC.SuppressFinalize(this);
         }
 
+        private void AcceptSocketAsync()
+        {
+            _tcpListener?.AcceptSocketAsync().ContinueWith(OnTcpSocketAccept);
+        }
+
         private void OnTcpSocketAccept(Task<Socket> task)
         {
             if (!task.IsFaulted)
@@ -62,17 +73,10 @@ namespace DisruptorNetRedis.Networking
             AcceptSocketAsync();
         }
 
-
-        private void AcceptSocketAsync()
-        {
-            if (_tcpListener != null)
-            {
-                _tcpListener.AcceptSocketAsync().ContinueWith(OnTcpSocketAccept);
-            }
-        }
-
         private void CreateSession(Socket socket)
         {
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, true);
+
             _sessions.Add(
                 new ClientSession()
                 {
@@ -93,26 +97,25 @@ namespace DisruptorNetRedis.Networking
                         if (s.ClientDataStream == null)
                             continue;
 
-                        try
+                        var ns = (NetworkStream)s.ClientDataStream;
+                        if (ns.DataAvailable)
                         {
-                            var ns = (NetworkStream)s.ClientDataStream;
-                            if (ns.DataAvailable)
+                            try
                             {
                                 RESP.ReadOneArray(ns, out List<byte[]> data);
 
                                 if (data != null)
                                     OnDataAvailable?.Invoke(s, data);
                             }
+                            catch (System.Net.ProtocolViolationException)
+                            {
+                                s.ClientDataStream = null;
+                            }
+                            catch (System.IO.IOException)
+                            {
+                                s.ClientDataStream = null;
+                            }
                         }
-                        catch (System.Net.ProtocolViolationException)
-                        {
-                            s.ClientDataStream = null;
-                        }
-                        catch (System.IO.IOException)
-                        {
-                            s.ClientDataStream = null;
-                        }
-
                     }
                 }
             }

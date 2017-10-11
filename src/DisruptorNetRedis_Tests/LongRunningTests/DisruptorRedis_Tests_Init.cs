@@ -23,20 +23,13 @@ namespace DisruptorNetRedis.LongRunningTests
             var _dbStrings = new StringsDatabase();
             var _dbLists = new ListsDatabase();
 
-            var session = new ClientSession()
-            {
-                ClientDataStream = null,
-                RemoteEndPoint = null
-            };
-
             var _commands = new RedisCommandDefinitions(_core, _dbStrings, _dbLists);
-            var _translator = new MockClientRequestTranslator();
 
             using (var dnr = new DisruptorRedis.DisruptorRedis(
-                _translator,
+                new MockClientRequestTranslator(),
                 new RequestParser(_commands),
                 new RequestHandler(),
-                new IWorkHandler<RingBufferSlot>[] { new MockResponseHandler() }))
+                new MockResponseHandler()))
             {
                 dnr.Start();
 
@@ -47,7 +40,7 @@ namespace DisruptorNetRedis.LongRunningTests
                     Encoding.UTF8.GetBytes("_VALUE_")
                 };
 
-                dnr.OnDataAvailable(session, data);
+                dnr.OnDataAvailable(new ClientSession(), data);
 
                 AssertWithTimeout.IsTrue(() => _dbStrings.StringsDictionary.Count == 1, "too slow", TimeSpan.FromMilliseconds(100));
             }

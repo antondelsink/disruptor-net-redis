@@ -41,7 +41,7 @@ namespace DisruptorNetRedis.LongRunningTests
                 _translator,
                 _parser,
                 new RequestHandler(),
-                new IWorkHandler<RingBufferSlot>[] { _commandLogger });
+                _commandLogger);
 
             _dnr.Start();
         }
@@ -53,13 +53,9 @@ namespace DisruptorNetRedis.LongRunningTests
         }
 
         [TestMethod]
-        public void Run_DNR_Perf__Set()
+        public void Test_DisruptorRedis_Perf__Set()
         {
-            var session = new ClientSession()
-            {
-                ClientDataStream = null,
-                RemoteEndPoint = null
-            };
+            var session = new ClientSession();
 
             var sw = Stopwatch.StartNew();
             foreach (var req in dataArray)

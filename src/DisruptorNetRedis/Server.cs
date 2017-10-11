@@ -14,7 +14,7 @@ namespace DisruptorNetRedis
 
         public Server(IPEndPoint listenOn)
         {
-            var _commands = 
+            var _commands =
                 new RedisCommandDefinitions(
                     new DotNetRedis.DotNetRedisServer(),
                     new Databases.StringsDatabase(),
@@ -25,7 +25,7 @@ namespace DisruptorNetRedis
                     new RequestTranslator(),
                     new RequestParser(_commands),
                     new RequestHandler(),
-                    new IWorkHandler<RingBufferSlot>[] { new ClientResponseHandler() });
+                    new ClientResponseHandler());
 
             _SessionManager = new SessionManager(listenOn);
 

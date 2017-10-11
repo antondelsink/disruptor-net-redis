@@ -18,7 +18,7 @@ namespace DisruptorNetRedis.DisruptorRedis
             IEventTranslatorTwoArg<RingBufferSlot, ClientSession, List<byte[]>> translator,
             IEventHandler<RingBufferSlot> requestParser,
             IEventHandler<RingBufferSlot> requestHandler,
-            IWorkHandler<RingBufferSlot>[] responseHandler)
+            IEventHandler<RingBufferSlot> responseHandler)
         {
             _translator = translator;
 
@@ -26,8 +26,8 @@ namespace DisruptorNetRedis.DisruptorRedis
 
             _disruptor
                 .HandleEventsWith(requestParser)
-                .HandleEventsWith(requestHandler)
-                .ThenHandleEventsWithWorkerPool(responseHandler);
+                .Then(requestHandler)
+                .Then(responseHandler);
         }
 
         private Disruptor.Dsl.Disruptor<RingBufferSlot> NewDisruptor()

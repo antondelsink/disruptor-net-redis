@@ -11,6 +11,10 @@
     <PackageReleaseNotes>This Initial release includes only the limited Redis commands necessary to get the clients working for performance testing. Clients include redis-cli, redis-benchmark, and StackExchange.Redis.</PackageReleaseNotes>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Disruptor" Version="3.3.6" />
   </ItemGroup>

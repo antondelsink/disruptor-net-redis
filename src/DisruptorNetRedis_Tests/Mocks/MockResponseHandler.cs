@@ -4,11 +4,11 @@ using System.Text;
 
 namespace DisruptorNetRedis.Tests
 {
-    internal class MockResponseHandler : IWorkHandler<RingBufferSlot>
+    internal class MockResponseHandler : IEventHandler<RingBufferSlot>
     {
         private StringBuilder _log = new StringBuilder();
 
-        public void OnEvent(RingBufferSlot slot)
+        public void OnEvent(RingBufferSlot slot, long sequence, bool endOfBatch)
         {
             lock (_log)
             {

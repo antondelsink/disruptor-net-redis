@@ -137,7 +137,6 @@ namespace DisruptorNetRedis
                     if (stream.ReadByte() != Constants.BulkStringPrefixByte)
                         throw new System.Net.ProtocolViolationException();
 
-
                     int lenBulkString = 0;
                     while ((b = stream.ReadByte()) != (byte)'\r')
                     {
@@ -152,7 +151,7 @@ namespace DisruptorNetRedis
 
                     var buffer = new byte[lenBulkString];
                     var readCount = stream.Read(buffer, 0, lenBulkString);
-                    //Debug.Assert(readCount == lenBulkString);
+
                     data.Add(buffer);
                     if (stream.ReadByte() != (byte)'\r')
                         throw new System.Net.ProtocolViolationException($"during {nameof(ReadOneArray)} an expected NewLine character was missing");

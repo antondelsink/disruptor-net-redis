@@ -7,8 +7,6 @@ namespace DisruptorNetRedis
 {
     public struct RedisKey
     {
-        private static HashAlgorithm _hasher = MD5.Create();
-
         private readonly byte[] _Key;
         private int? _HashCode;
 
@@ -43,6 +41,8 @@ namespace DisruptorNetRedis
 
         public override int GetHashCode()
         {
+            // TODO: profile/test
+
             if (!_HashCode.HasValue)
             {
                 //_HashCode = BitConverter.ToInt32(_hasher.ComputeHash(this._Key), 0);
@@ -57,12 +57,12 @@ namespace DisruptorNetRedis
                         break;
                     case 2:
                     case 3:
-                        _HashCode = BitConverter.ToInt16(_Key, 0); break;
+                        _HashCode = BitConverter.ToInt16(_Key, 0);
+                        break;
                     default:
-                        _HashCode = BitConverter.ToInt32(_hasher.ComputeHash(this._Key), 0);
+                        _HashCode = BitConverter.ToInt32(this._Key, 0);
                         break;
                 }
-
             }
             return _HashCode.Value;
         }

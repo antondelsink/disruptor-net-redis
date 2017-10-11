@@ -1,12 +1,14 @@
 ﻿using Disruptor;
 using System.Diagnostics;
+using System.IO;
+using System.Net.Sockets;
 using System.Text;
 
 namespace DisruptorNetRedis.DisruptorRedis
 {
-    internal class ClientResponseHandler : IWorkHandler<RingBufferSlot>
+    internal class ClientResponseHandler : IEventHandler<RingBufferSlot>
     {
-        public void OnEvent(RingBufferSlot slot)
+        public void OnEvent(RingBufferSlot slot, long sequence, bool endOfBatch)
         {
             if (slot.Response == null)
                 return;
