@@ -22,8 +22,9 @@ namespace DisruptorNetRedis.LongRunningTests
             var _core = new DotNetRedisServer();
             var _dbStrings = new StringsDatabase();
             var _dbLists = new ListsDatabase();
+            var _dbSets = new Databases.SetsDatabase();
 
-            var _commands = new RedisCommandDefinitions(_core, _dbStrings, _dbLists);
+            var _commands = new RedisCommandDefinitions(_core, _dbStrings, _dbLists, _dbSets);
 
             using (var dnr = new DisruptorRedis.DisruptorRedis(
                 new MockClientRequestTranslator(),

@@ -18,7 +18,8 @@ namespace DisruptorNetRedis
                 new RedisCommandDefinitions(
                     new DotNetRedis.DotNetRedisServer(),
                     new Databases.StringsDatabase(),
-                    new Databases.ListsDatabase());
+                    new Databases.ListsDatabase(),
+                    new Databases.SetsDatabase());
 
             _DisruptorRedis =
                 new DisruptorRedis.DisruptorRedis(

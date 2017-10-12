@@ -17,6 +17,7 @@ namespace DisruptorNetRedis.Tests
         private StringsDatabase _dbStrings = null;
         private RedisCommandDefinitions _commands = null;
         private ListsDatabase _dbLists = null;
+        private SetsDatabase _dbSets = null;
 
         [TestInitialize]
         public void Test_Init()
@@ -24,7 +25,8 @@ namespace DisruptorNetRedis.Tests
             _core = new DotNetRedisServer();
             _dbStrings = new StringsDatabase();
             _dbLists = new ListsDatabase();
-            _commands = new RedisCommandDefinitions(_core, _dbStrings, _dbLists);
+            _dbSets = new SetsDatabase();
+            _commands = new RedisCommandDefinitions(_core, _dbStrings, _dbLists, _dbSets);
         }
 
         [TestMethod]

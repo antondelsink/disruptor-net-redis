@@ -26,8 +26,9 @@ namespace DisruptorNetRedis.LongRunningTests
         private static DotNetRedisServer _core = new DotNetRedisServer();
         private static StringsDatabase _strings = new StringsDatabase();
         private static ListsDatabase _dbLists = new Databases.ListsDatabase();
+        private static SetsDatabase _dbSets = new Databases.SetsDatabase();
 
-        private static RedisCommandDefinitions _commands = new RedisCommandDefinitions(_core, _strings, _dbLists);
+        private static RedisCommandDefinitions _commands = new RedisCommandDefinitions(_core, _strings, _dbLists, _dbSets);
         private static MockResponseHandler _commandLogger = new MockResponseHandler();
         private static MockClientRequestTranslator _translator = new MockClientRequestTranslator();
         private static RequestParser _parser = new RequestParser(_commands);

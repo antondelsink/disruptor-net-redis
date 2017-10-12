@@ -12,16 +12,18 @@ namespace DisruptorNetRedis
         private DotNetRedisServer _core = null;
         private StringsDatabase _dbStrings = null;
         private ListsDatabase _dbLists = null;
+        private SetsDatabase _dbSets = null;
 
         private SortedDictionary<string, Func<List<byte[]>, byte[]>> _commands = null;
 
         private Func<List<byte[]>, Func<List<byte[]>, byte[]>>[] _commonCommands = null;
 
-        public RedisCommandDefinitions(DotNetRedisServer core, StringsDatabase dbStrings, ListsDatabase dbLists)
+        public RedisCommandDefinitions(DotNetRedisServer core, StringsDatabase dbStrings, ListsDatabase dbLists, SetsDatabase dbSets)
         {
             _core = core;
             _dbStrings = dbStrings;
             _dbLists = dbLists;
+            _dbSets = dbSets;
 
             _commonCommands = new Func<List<byte[]>, Func<List<byte[]>, byte[]>>[]
             {
@@ -39,11 +41,15 @@ namespace DisruptorNetRedis
 
             _commands = new SortedDictionary<string, Func<List<byte[]>, byte[]>>()
             {
+                { "SADD", Invoke_SADD },
+                { "SCARD", Invoke_SCARD },
+                { "SUNION", Invoke_SUNION },
                 { "INFO", Invoke_INFO},
                 { "COMMAND", Invoke_COMMAND },
                 { "SUBSCRIBE", Invoke_SUBSCRIBE}
             };
         }
+
 
         public Func<List<byte[]>, byte[]> GetCommand(List<byte[]> data)
         {
@@ -282,6 +288,33 @@ namespace DisruptorNetRedis
             var ci_cmd = RESP.CommandInfo("command", 0, new string[] { "loading", "stale" }, 0, 0, 0);
 
             return Encoding.UTF8.GetBytes(RESP.AsRedisArray(ci_cmd, ci_get, ci_set));
+        }
+
+        private byte[] Invoke_SUNION(List<byte[]> data)
+        {
+            var keys = from arr in data
+                       select new RedisKey(arr);
+
+            var result = _dbSets.SUnion(keys.Skip(1).ToArray());
+
+            return RESP.ToRedisArrayAsByteArray(result.ToArray());
+        }
+
+        private byte[] Invoke_SCARD(List<byte[]> data)
+        {
+            var key = new RedisKey(data[1]);
+
+            return Encoding.UTF8.GetBytes(RESP.AsRedisNumber(_dbSets.SCard(key)));
+        }
+
+        private byte[] Invoke_SADD(List<byte[]> data)
+        {
+            var key = new RedisKey(data[1]);
+
+            var vals = from arr in data.Skip(2) // skip 'SADD' and the Key
+                       select new RedisValue(arr);
+
+            return Encoding.UTF8.GetBytes(RESP.AsRedisNumber(_dbSets.SAdd(key, vals)));
         }
     }
 }
