@@ -46,9 +46,9 @@ namespace DisruptorNetRedis
         public void Dispose()
         {
             _SessionManager?.Shutdown();
-            _DisruptorRedis?.Dispose();
-
             _SessionManager = null;
+
+            _DisruptorRedis?.Dispose();
             _DisruptorRedis = null;
 
             GC.SuppressFinalize(this);

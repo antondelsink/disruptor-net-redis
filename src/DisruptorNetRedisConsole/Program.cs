@@ -15,6 +15,8 @@ namespace DisruptorNetRedisConsole
 
             Console.Write("Server Running...");
             Console.ReadKey();
+
+            s.Stop();
         }
     }
 }

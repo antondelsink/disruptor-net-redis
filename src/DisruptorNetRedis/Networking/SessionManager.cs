@@ -21,6 +21,8 @@ namespace DisruptorNetRedis.Networking
 
         internal event Action<ClientSession, List<byte[]>> OnDataAvailable;
 
+        private CancellationTokenSource _cancel = null;
+
         public SessionManager(IPEndPoint listenOn)
         {
             _tcpListener = new TcpListener(listenOn);
@@ -39,6 +41,8 @@ namespace DisruptorNetRedis.Networking
 
             _tcpListener.Start(512);
 
+            _cancel = new CancellationTokenSource();
+
             AcceptSocketAsync();
 
             _backgroundThread.Start();
@@ -51,6 +55,8 @@ namespace DisruptorNetRedis.Networking
 
         public void Dispose()
         {
+            _cancel?.Cancel();
+
             _tcpListener?.Stop();
             _tcpListener = null;
 
@@ -87,8 +93,11 @@ namespace DisruptorNetRedis.Networking
 
         private void MonitorNetworkStreams()
         {
-            while (_sessions != null)
+            while (true)
             {
+                if (_cancel.IsCancellationRequested)
+                    return;
+
                 var localSessions = _sessions;
                 if (localSessions != null)
                 {
@@ -118,8 +127,8 @@ namespace DisruptorNetRedis.Networking
                         }
                     }
                 }
+                Thread.Yield();
             }
-            Thread.Yield();
         }
     }
 }
