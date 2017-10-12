@@ -46,7 +46,7 @@ namespace DisruptorNetRedis.Tests.Databases
         }
 
         [TestMethod]
-        public void Tests_SetsDatabase_SUnion()
+        public void Test_SetsDatabase_SUnion()
         {
             _db.SAdd("kSetOne", new RedisValue[] { "s1v1" });
             _db.SAdd("kSetTwo", new RedisValue[] { "s2v1", "s2v2" });

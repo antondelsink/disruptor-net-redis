@@ -79,5 +79,14 @@ namespace DisruptorNetRedis.Tests
             Check.That(data.Count).IsEqualTo(2);
             Check.That(data[0]).ContainsExactly(Encoding.UTF8.GetBytes("GET"));
         }
+
+        [TestMethod]
+        public void Test_RESP_StringCompare()
+        {
+            byte[] b = Encoding.UTF8.GetBytes("LpUsH");
+            string s = "LPUSH";
+
+            Check.That(RESP.StringCompare(b, s)).IsTrue();
+        }
     }
 }

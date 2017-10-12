@@ -9,7 +9,10 @@ namespace DisruptorNetRedis.DotNetRedis
 
         public void Client_SetName(long clientID, byte[] name)
         {
-            _clientNames.Add(clientID, name);
+            // TODO: provide client ID from slot or session
+
+            if (!_clientNames.ContainsKey(clientID))
+                _clientNames.Add(clientID, name);
         }
     }
 }

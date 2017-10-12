@@ -14,14 +14,13 @@ namespace DisruptorNetRedis.Databases
         /// <returns>number of elements added to the set</returns>
         public int SAdd(RedisKey key, params RedisValue[] vals)
         {
-            return SAdd(key, vals);
+            return SAdd(key, (IEnumerable<RedisValue>)vals);
         }
 
         /// <summary>
         /// https://redis.io/commands/sadd
         /// </summary>
         public int SAdd(RedisKey key, IEnumerable<RedisValue> vals)
-
         {
             HashSet<RedisValue> theSet = null;
             if (SetsDictionary.ContainsKey(key))

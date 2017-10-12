@@ -165,5 +165,19 @@ namespace DisruptorNetRedis
                 data = new List<byte[]>();
             }
         }
+
+        public static bool StringCompare(byte[] byteArray, string charArray)
+        {
+            if (byteArray.Length != charArray.Length)
+                return false;
+
+            for (int ix = 0; ix < byteArray.Length; ix++)
+            {
+                if (charArray[ix] != byteArray[ix] &&
+                    charArray[ix] != byteArray[ix] - 32)
+                    return false;
+            }
+            return true;
+        }
     }
 }

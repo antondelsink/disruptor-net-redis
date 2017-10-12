@@ -12,9 +12,9 @@ namespace DisruptorNetRedis
         public const string OK_SimpleString = "+" + OK + "\r\n";
         public static byte[] OK_SimpleStringAsByteArray = Encoding.UTF8.GetBytes(OK_SimpleString);
 
-        public const string ERR = "ERR";
-        public const string ERR_SimpleString = "-" + ERR + "\r\n";
-        public static byte[] ERR_Binary = Encoding.UTF8.GetBytes(ERR_SimpleString);
+        public const string GenericError = "Error";
+        public const string GenericError_SimpleString = "-" + GenericError + "\r\n";
+        public static byte[] GenericError_SimpleStringAsByteArray = Encoding.UTF8.GetBytes(GenericError_SimpleString);
 
         public const string UnknownCommandError = "Command not supported.";
         public const string UnknownCommandError_SimpleString = "-" + UnknownCommandError + "\r\n";

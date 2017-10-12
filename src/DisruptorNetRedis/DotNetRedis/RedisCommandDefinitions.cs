@@ -4,281 +4,80 @@ using System.Linq;
 using System;
 using DisruptorNetRedis.DotNetRedis;
 using DisruptorNetRedis.Databases;
+using DisruptorNetRedis.DotNetRedis.Commands;
 
 namespace DisruptorNetRedis
 {
     internal class RedisCommandDefinitions
     {
-        private DotNetRedisServer _core = null;
+        DotNetRedisServer _server = null;
         private StringsDatabase _dbStrings = null;
         private ListsDatabase _dbLists = null;
         private SetsDatabase _dbSets = null;
+
+        StringCommands _cmdsStrings = null;
+        ListCommands _cmdsLists = null;
+        SetCommands _cmdsSets = null;
+        ServerCommands _cmdsServer = null;
+
+        PubSubCommands _cmdsPubSub = new PubSubCommands();
 
         private SortedDictionary<string, Func<List<byte[]>, byte[]>> _commands = null;
 
         private Func<List<byte[]>, Func<List<byte[]>, byte[]>>[] _commonCommands = null;
 
-        public RedisCommandDefinitions(DotNetRedisServer core, StringsDatabase dbStrings, ListsDatabase dbLists, SetsDatabase dbSets)
+        public RedisCommandDefinitions(DotNetRedisServer server, StringsDatabase dbStrings, ListsDatabase dbLists, SetsDatabase dbSets)
         {
-            _core = core;
+            _server = server;
             _dbStrings = dbStrings;
             _dbLists = dbLists;
             _dbSets = dbSets;
 
-            _commonCommands = new Func<List<byte[]>, Func<List<byte[]>, byte[]>>[]
-            {
-                new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_GET(d) ? new Func<List<byte[]>, byte[]>(Invoke_GET) : null),
-                new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_SET(d) ? new Func<List<byte[]>, byte[]>(Invoke_SET) : null),
-
-                new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_LPUSH(d) ? new Func<List<byte[]>, byte[]>(Invoke_LPUSH) : null),
-                new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_RPUSH(d) ? new Func<List<byte[]>, byte[]>(Invoke_RPUSH) : null),
-                new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_LRANGE(d) ? new Func<List<byte[]>, byte[]>(Invoke_LRANGE) : null),
-
-                new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_PING(d) ? new Func<List<byte[]>, byte[]>(Invoke_PING) : null),
-                new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_ECHO(d) ? new Func<List<byte[]>, byte[]>(Invoke_ECHO) : null),
-                new Func<List<byte[]>, Func<List<byte[]>, byte[]>>((d) => IsRedisCommand_CLIENT_SETNAME(d) ? new Func<List<byte[]>, byte[]>(Invoke_CLIENT_SETNAME) : null),
-            };
-
-            _commands = new SortedDictionary<string, Func<List<byte[]>, byte[]>>()
-            {
-                { "SADD", Invoke_SADD },
-                { "SCARD", Invoke_SCARD },
-                { "SUNION", Invoke_SUNION },
-                { "INFO", Invoke_INFO},
-                { "COMMAND", Invoke_COMMAND },
-                { "SUBSCRIBE", Invoke_SUBSCRIBE}
-            };
+            _cmdsStrings = new StringCommands(_dbStrings);
+            _cmdsLists = new ListCommands(_dbLists);
+            _cmdsSets = new SetCommands(_dbSets);
+            _cmdsServer = new ServerCommands(_server);
         }
-
 
         public Func<List<byte[]>, byte[]> GetCommand(List<byte[]> data)
         {
-            // TODO: Test/Profile and aim for zero allocations...
+            if (data == null || data.Count == 0)
+                return Invoke_UnknownCommandError;
 
-            Func<List<byte[]>, byte[]> selectedCommand = null;
-            foreach (var eval in _commonCommands)
+            // TODO: aim for zero allocations for at least all 'read' commands (GET, LRANGE, etc.)
+
+            var cmd = data[0];
+            if (RESP.StringCompare(cmd, "GET")) return _cmdsStrings.Exec_GET;
+            if (RESP.StringCompare(cmd, "SET")) return _cmdsStrings.Exec_SET;
+
+            if (RESP.StringCompare(cmd, "LPUSH")) return _cmdsLists.Exec_LPUSH;
+            if (RESP.StringCompare(cmd, "RPUSH")) return _cmdsLists.Exec_RPUSH;
+            if (RESP.StringCompare(cmd, "LRANGE")) return _cmdsLists.Exec_LRANGE;
+
+            if (RESP.StringCompare(cmd, "SADD")) return _cmdsSets.Exec_SADD;
+            if (RESP.StringCompare(cmd, "SCARD")) return _cmdsSets.Exec_SCARD;
+            if (RESP.StringCompare(cmd, "SUNION")) return _cmdsSets.Exec_SUNION;
+
+            if (RESP.StringCompare(cmd, "PING")) return _cmdsServer.Exec_PING;
+            if (RESP.StringCompare(cmd, "ECHO")) return _cmdsServer.Exec_ECHO;
+            if (RESP.StringCompare(cmd, "INFO")) return _cmdsServer.Exec_INFO;
+
+            if (RESP.StringCompare(cmd, "SUBSCRIBE")) return _cmdsPubSub.Exec_SUBSCRIBE;
+
+            if (RESP.StringCompare(cmd, "CLIENT") &&
+                data.Count > 1 && RESP.StringCompare(data[1], "SETNAME"))
             {
-                selectedCommand = eval(data);
-
-                if (selectedCommand != null)
-                    return selectedCommand;
+                return _cmdsServer.Exec_CLIENT_SETNAME;
             }
 
-            string cmd = Encoding.UTF8.GetString(data[0]).ToUpper();
-            if (_commands.ContainsKey(cmd))
-                return _commands[cmd];
+            if (RESP.StringCompare(cmd, "COMMAND")) return Invoke_COMMAND;
 
             return Invoke_UnknownCommandError;
         }
 
-        private byte[] Invoke_LRANGE(List<byte[]> data)
-        {
-            var key = new RedisKey(data[1]);
-            var start = (int)new RedisValue(data[2]);
-            var stop = (int)new RedisValue(data[3]);
-
-            var results = _dbLists.LRange(key, start, stop);
-
-            return RESP.ToRedisArrayAsByteArray(results.ToArray());
-        }
-
-        private byte[] Invoke_RPUSH(List<byte[]> data)
-        {
-            var key = new RedisKey(data[1]);
-
-            data.RemoveRange(0, 2); // remove 'RPUSH' and the key from the array.
-
-            var vals = from v in data
-                       select new RedisValue(v);
-
-            _dbLists.RPush(key, vals.ToArray());
-
-            return Constants.OK_SimpleStringAsByteArray;
-        }
-
-        private byte[] Invoke_LPUSH(List<byte[]> data)
-        {
-            var key = new RedisKey(data[1]);
-
-            data.RemoveRange(0, 2); // remove 'LPUSH' and the key from the array.
-
-            var vals = from v in data
-                       select new RedisValue(v);
-
-            _dbLists.LPush(key, vals.ToArray());
-
-            return Constants.OK_SimpleStringAsByteArray;
-        }
-
-        private bool IsRedisCommand_LRANGE(List<byte[]> data)
-        {
-            return
-                data.Count == 4 &&
-                Encoding.UTF8.GetString(data[0]).ToUpper() == "LRANGE";
-        }
-
-        private bool IsRedisCommand_RPUSH(List<byte[]> data)
-        {
-            return
-                data.Count >= 3 &&
-                Encoding.UTF8.GetString(data[0]).ToUpper() == "RPUSH";
-        }
-
-        private bool IsRedisCommand_LPUSH(List<byte[]> data)
-        {
-            return
-                data.Count >= 3 &&
-                Encoding.UTF8.GetString(data[0]).ToUpper() == "LPUSH";
-        }
-
-
-
         private byte[] Invoke_UnknownCommandError(List<byte[]> data)
         {
             return Constants.UnknownCommandError_Binary;
-        }
-
-        private static bool IsRedisCommand_INFO(List<byte[]> data)
-        {
-            return
-                data.Count > 0 &&
-                Encoding.UTF8.GetString(data[0]).ToUpper() == "INFO";
-        }
-
-        private static bool IsRedisCommand_SUBSCRIBE(List<byte[]> data)
-        {
-            return
-                data.Count == 2 &&
-                Encoding.UTF8.GetString(data[0]).ToUpper() == "SUBSCRIBE";
-        }
-
-        private static bool IsRedisCommand_ECHO(List<byte[]> data)
-        {
-            return
-                data.Count == 2 &&
-                (
-                Enumerable.SequenceEqual<byte>(data[0], Constants.ECHO_Binary) ||
-                Enumerable.SequenceEqual<byte>(data[0], Constants.echo_Binary) ||
-                Encoding.UTF8.GetString(data[0]).ToUpper() == Constants.ECHO
-
-                );
-        }
-
-        public static bool IsRedisCommand_CLIENT_SETNAME(List<byte[]> data)
-        {
-            return
-                data.Count == 3 &&
-                Encoding.UTF8.GetString(data[0]).ToUpper() == "CLIENT" &&
-                Encoding.UTF8.GetString(data[0]).ToUpper() == "SETNAME";
-        }
-
-        public static bool IsRedisCommand_PING(List<byte[]> data)
-        {
-            return
-                data.Count == 1 &&
-                (
-                Enumerable.SequenceEqual<byte>(data[0], Constants.PING_Binary) ||
-                Enumerable.SequenceEqual<byte>(data[0], Constants.ping_Binary) ||
-                Encoding.UTF8.GetString(data[0]).ToUpper() == Constants.PING
-                );
-        }
-
-        public static bool IsRedisCommand_COMMAND(List<byte[]> data)
-        {
-            return
-                data.Count == 1 &&
-                (
-                Encoding.UTF8.GetString(data[0]).ToUpper() == "COMMAND"
-                );
-        }
-
-        public static bool IsRedisCommand_GET(List<byte[]> data)
-        {
-            return
-                data.Count == 2 &&
-                (
-                Enumerable.SequenceEqual<byte>(data[0], Constants.GET_Binary) ||
-                Enumerable.SequenceEqual<byte>(data[0], Constants.get_Binary) ||
-                Encoding.UTF8.GetString(data[0]).ToUpper() == Constants.GET
-                );
-        }
-
-        public static bool IsRedisCommand_SET(List<byte[]> data)
-        {
-            return
-                data.Count == 3 &&
-                (
-                Enumerable.SequenceEqual<byte>(data[0], Constants.SET_Binary) ||
-                Enumerable.SequenceEqual<byte>(data[0], Constants.set_Binary) ||
-                Encoding.UTF8.GetString(data[0]).ToUpper() == Constants.SET
-                );
-        }
-
-
-        public byte[] Invoke_INFO(List<byte[]> data)
-        {
-            return Encoding.UTF8.GetBytes(RESP.AsRedisBulkString("# Server\r\nos:Windows\r\ntcp_port:6379\r\n"));
-        }
-
-        public byte[] Invoke_SUBSCRIBE(List<byte[]> data)
-        {
-            // TODO: implement pub/sub
-
-            var subscribe = RESP.AsRedisBulkString("subscribe");
-            var channel = RESP.AsRedisBulkString(Encoding.UTF8.GetString(data[1]));
-            var one = RESP.AsRedisNumber(1);
-
-            return Encoding.UTF8.GetBytes(RESP.AsRedisArray(subscribe, channel, one));
-        }
-
-        public byte[] Invoke_CLIENT_SETNAME(List<byte[]> data)
-        {
-            var clientID = 0;// slot.Session.RemoteEndPoint.Address.Address;
-
-            _core.Client_SetName(clientID, data[2]);
-
-            return Constants.OK_SimpleStringAsByteArray;
-        }
-
-        public byte[] Invoke_ECHO(List<byte[]> data)
-        {
-            return RESP.AsRedisBulkString(data[1]);
-        }
-
-        public byte[] Invoke_PING(List<byte[]> data)
-        {
-            if (data.Count == 2)
-                return RESP.AsRedisBulkString(data[1]);
-            else
-                return Constants.PONG_SimpleStringAsBinary;
-        }
-        public byte[] Invoke_GET(List<byte[]> data)
-        {
-            var key = new RedisKey(data[1]);
-
-            return
-                _dbStrings.Get(key, out RedisValue val)
-                ?
-                RESP.ToBulkStringAsByteArray(val)
-                :
-                Constants.NULL_Binary;
-
-            // TODO: if key NOT found, check if exists elsewhere, and if so return an error because GET should only be used on strings.
-        }
-
-        public byte[] Invoke_SET(List<byte[]> data)
-        {
-            var key = new RedisKey(data[1]);
-            var val = new RedisValue(data[2]);
-
-            return
-                _dbStrings.Set(key, val)
-                ?
-                Constants.OK_SimpleStringAsByteArray
-                :
-                Constants.ERR_Binary;
-
-            // TODO: clear Key from non-strings key collections (list, set, etc.)
         }
 
         public byte[] Invoke_COMMAND(List<byte[]> data)
@@ -288,33 +87,6 @@ namespace DisruptorNetRedis
             var ci_cmd = RESP.CommandInfo("command", 0, new string[] { "loading", "stale" }, 0, 0, 0);
 
             return Encoding.UTF8.GetBytes(RESP.AsRedisArray(ci_cmd, ci_get, ci_set));
-        }
-
-        private byte[] Invoke_SUNION(List<byte[]> data)
-        {
-            var keys = from arr in data
-                       select new RedisKey(arr);
-
-            var result = _dbSets.SUnion(keys.Skip(1).ToArray());
-
-            return RESP.ToRedisArrayAsByteArray(result.ToArray());
-        }
-
-        private byte[] Invoke_SCARD(List<byte[]> data)
-        {
-            var key = new RedisKey(data[1]);
-
-            return Encoding.UTF8.GetBytes(RESP.AsRedisNumber(_dbSets.SCard(key)));
-        }
-
-        private byte[] Invoke_SADD(List<byte[]> data)
-        {
-            var key = new RedisKey(data[1]);
-
-            var vals = from arr in data.Skip(2) // skip 'SADD' and the Key
-                       select new RedisValue(arr);
-
-            return Encoding.UTF8.GetBytes(RESP.AsRedisNumber(_dbSets.SAdd(key, vals)));
         }
     }
 }
