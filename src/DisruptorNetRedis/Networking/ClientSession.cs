@@ -8,7 +8,14 @@ namespace DisruptorNetRedis.Networking
 {
     internal class ClientSession
     {
+        public Socket Socket = null;
         public IPEndPoint RemoteEndPoint = null;
+
+        public ClientSession(Socket socket)
+        {
+            Socket = socket;
+            RemoteEndPoint = (IPEndPoint)socket.RemoteEndPoint;
+        }
 
         public Stream ClientDataStream = null; // normally a NetworkStream; for tests it's a MemoryStream.
     }

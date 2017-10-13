@@ -41,7 +41,7 @@ namespace DisruptorNetRedis.LongRunningTests
                     Encoding.UTF8.GetBytes("_VALUE_")
                 };
 
-                dnr.OnDataAvailable(new ClientSession(), data);
+                dnr.OnDataAvailable(null, data);
 
                 AssertWithTimeout.IsTrue(() => _dbStrings.StringsDictionary.Count == 1, "too slow", TimeSpan.FromMilliseconds(100));
             }

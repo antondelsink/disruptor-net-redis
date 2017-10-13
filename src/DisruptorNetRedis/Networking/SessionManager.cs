@@ -19,7 +19,9 @@ namespace DisruptorNetRedis.Networking
 
         private Thread _backgroundThread = null;
 
-        internal event Action<ClientSession, List<byte[]>> OnDataAvailable;
+        internal event Action<ClientSession> OnNewSession;
+        internal event Func<ClientSession, List<byte[]>> OnDataAvailable;
+        internal event Action<ClientSession, List<byte[]>> OnRespArrayAvailable;
 
         private CancellationTokenSource _cancel = null;
 
@@ -81,14 +83,11 @@ namespace DisruptorNetRedis.Networking
 
         private void CreateSession(Socket socket)
         {
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.DontLinger, true);
+            var newSession = new ClientSession(socket);
 
-            _sessions.Add(
-                new ClientSession()
-                {
-                    RemoteEndPoint = (IPEndPoint)socket.RemoteEndPoint,
-                    ClientDataStream = new NetworkStream(socket, true)
-                });
+            OnNewSession?.Invoke(newSession);
+
+            _sessions.Add(newSession); // must be after event OnNewSession otherwise session object not initialized during foreach of method MonitorNetworkStreams
         }
 
         private void MonitorNetworkStreams()
@@ -103,18 +102,16 @@ namespace DisruptorNetRedis.Networking
                 {
                     foreach (var s in localSessions)
                     {
-                        if (s.ClientDataStream == null)
-                            continue;
+                        var ns = s.ClientDataStream as NetworkStream;
 
-                        var ns = (NetworkStream)s.ClientDataStream;
-                        if (ns.DataAvailable)
+                        if (ns != null && ns.DataAvailable)
                         {
                             try
                             {
-                                RESP.ReadOneArray(ns, out List<byte[]> data);
+                                var data = OnDataAvailable?.Invoke(s);
 
                                 if (data != null)
-                                    OnDataAvailable?.Invoke(s, data);
+                                    OnRespArrayAvailable?.Invoke(s, data);
                             }
                             catch (System.Net.ProtocolViolationException)
                             {

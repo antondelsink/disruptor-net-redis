@@ -56,12 +56,10 @@ namespace DisruptorNetRedis.LongRunningTests
         [TestMethod]
         public void Test_DisruptorRedis_Perf__Set()
         {
-            var session = new ClientSession();
-
             var sw = Stopwatch.StartNew();
             foreach (var req in dataArray)
             {
-                _dnr.OnDataAvailable(session, req);
+                _dnr.OnDataAvailable(null, req);
             }
             sw.Stop();
             Debug.WriteLine($"stopwatch: {sw.ElapsedMilliseconds.ToString()}ms");

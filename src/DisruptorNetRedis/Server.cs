@@ -2,7 +2,9 @@
 using DisruptorNetRedis.DisruptorRedis;
 using DisruptorNetRedis.Networking;
 using System;
+using System.Collections.Generic;
 using System.Net;
+using System.Net.Sockets;
 
 namespace DisruptorNetRedis
 {
@@ -30,7 +32,20 @@ namespace DisruptorNetRedis
 
             _SessionManager = new SessionManager(listenOn);
 
-            _SessionManager.OnDataAvailable += _DisruptorRedis.OnDataAvailable;
+            _SessionManager.OnNewSession +=
+                (newSession) =>
+                {
+                    newSession.ClientDataStream = new NetworkStream(newSession.Socket, true);
+                };
+
+            _SessionManager.OnDataAvailable +=
+                (session) =>
+                {
+                    RESP.ReadOneArray(session.ClientDataStream, out List<byte[]> data);
+                    return data;
+                };
+
+            _SessionManager.OnRespArrayAvailable += _DisruptorRedis.OnDataAvailable;
         }
 
         public void Start()
