@@ -104,6 +104,76 @@ namespace DisruptorNetRedis
             return result;
         }
 
+        /// <summary>
+        /// Read Whole Array from Buffer; if BulkString longer than remaining Buffer, read synchronous!
+        /// </summary>
+        internal static void GetArray(Stream theStream, byte[] buffer, int ixBufferDataStart, int bufferDataLength, out List<byte[]> data, out int? ixNextArrayStart, out int? remainingDataLength)
+        {
+            int ix = ixBufferDataStart;
+
+            AdvanceIndexOnChar('*', buffer, ref ix);
+            int countArrayElements = GetInteger(buffer, ref ix);
+            AdvanceIndexOnChar('\r', buffer, ref ix);
+            AdvanceIndexOnChar('\n', buffer, ref ix);
+
+            data = new List<byte[]>(countArrayElements);
+
+            for (int nArrayElement = 0; nArrayElement < countArrayElements; nArrayElement++)
+            {
+                AdvanceIndexOnChar('$', buffer, ref ix);
+                var lenBulkString = GetInteger(buffer, ref ix);
+                AdvanceIndexOnChar('\r', buffer, ref ix);
+                AdvanceIndexOnChar('\n', buffer, ref ix);
+
+                if (lenBulkString + 2 <= (bufferDataLength - ix))
+                {
+                    // bulkstring fits completely within remaining buffer, including trailing \r\n
+
+                    var bulkString = new byte[lenBulkString];
+                    Array.Copy(buffer, ix, bulkString, 0, lenBulkString);
+                    ix += lenBulkString;
+                    AdvanceIndexOnChar('\r', buffer, ref ix);
+                    AdvanceIndexOnChar('\n', buffer, ref ix);
+
+                    data.Add(bulkString);
+                }
+                else
+                {
+                    // bulk string extends beyond current buffer
+
+                    throw new NotImplementedException();
+                }
+            }
+#if DEBUG
+            Array.Clear(buffer, ixBufferDataStart, ix);
+#endif
+
+            ixNextArrayStart = (ix < bufferDataLength) ? ix : (int?)null;
+            remainingDataLength = (ix < bufferDataLength) ? (bufferDataLength - ix) : (int?)null;
+        }
+
+        private static void AdvanceIndexOnChar(char c, byte[] buffer, ref int ix)
+        {
+            var firstByte = buffer[ix];
+            if (firstByte != (byte)c)
+                throw new System.Net.ProtocolViolationException($"during {nameof(AdvanceIndexOnChar)} the byte read was '{(char)firstByte}' instead of the required '{c}' ");
+            ix++;
+        }
+
+        private static int GetInteger(byte[] buffer, ref int ix)
+        {
+            int countArrayElements = 0;
+            for (; ix < buffer.Length && buffer[ix] != '\r'; ix++)
+            {
+                if (!char.IsDigit((char)buffer[ix]))
+                    throw new System.Net.ProtocolViolationException($"during {nameof(GetInteger)} a digit was expected while determining count of array elements; instead the byte read was: '{(char)buffer[ix]}'.");
+
+                countArrayElements = countArrayElements * 10 + (buffer[ix] - Constants.ZeroDigitByte);
+            }
+
+            return countArrayElements;
+        }
+
         public static void ReadOneArray(System.IO.Stream stream, out List<byte[]> data)
         {
             data = null;
@@ -178,6 +248,56 @@ namespace DisruptorNetRedis
                     return false;
             }
             return true;
+        }
+
+
+
+        internal static List<byte[]> ReadRespArray(Stream stream)
+        {
+            int redisArrayLength = ReadInteger(stream);
+
+            var data = new List<byte[]>(redisArrayLength);
+
+            for (int n = 0; n < redisArrayLength; n++)
+            {
+                AdvanceIndexOnChar('$', stream);
+                var bulkStringLength = ReadInteger(stream);
+                data.Add(GetBulkString(bulkStringLength, stream));
+                AdvanceIndexOnChar('\r', stream);
+                AdvanceIndexOnChar('\n', stream);
+            }
+
+            return data;
+        }
+
+        internal static byte[] GetBulkString(int len, Stream s)
+        {
+            var buffer = new byte[len];
+            s.Read(buffer, 0, len);
+            return buffer;
+        }
+
+        internal static void AdvanceIndexOnChar(char c, Stream s)
+        {
+            var firstByte = (byte)s.ReadByte();
+            if (firstByte != (byte)c)
+                throw new System.Net.ProtocolViolationException($"during {nameof(AdvanceIndexOnChar)} the byte read was '{(char)firstByte}' instead of the required '{c}' ");
+        }
+
+        internal static int ReadInteger(Stream stream)
+        {
+            int countArrayElements = 0;
+            int b;
+            while ((b = stream.ReadByte()) != (byte)'\r')
+            {
+                if (!char.IsDigit((char)b))
+                    throw new System.Net.ProtocolViolationException($"during {nameof(ReadInteger)} a digit was expected while determining count of array elements; instead the byte read was: '{(char)b}'.");
+
+                countArrayElements = countArrayElements * 10 + (b - Constants.ZeroDigitByte);
+            }
+            if (stream.ReadByte() != (byte)'\n')
+                throw new System.Net.ProtocolViolationException($"during {nameof(ReadInteger)} an expected NewLine character was missing");
+            return countArrayElements;
         }
     }
 }

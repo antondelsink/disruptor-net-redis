@@ -1,10 +1,10 @@
-﻿using Disruptor;
-using DisruptorNetRedis.DisruptorRedis;
+﻿using DisruptorNetRedis.DisruptorRedis;
 using DisruptorNetRedis.Networking;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 
 namespace DisruptorNetRedis
 {
@@ -13,6 +13,8 @@ namespace DisruptorNetRedis
         private SessionManager _SessionManager = null;
 
         private DisruptorRedis.DisruptorRedis _DisruptorRedis = null;
+
+        internal event Action<ClientSession, List<byte[]>> OnDataAvailable;
 
         public Server(IPEndPoint listenOn)
         {
@@ -32,20 +34,58 @@ namespace DisruptorNetRedis
 
             _SessionManager = new SessionManager(listenOn);
 
+            this.OnDataAvailable += _DisruptorRedis.OnDataAvailable;
+
             _SessionManager.OnNewSession +=
                 (newSession) =>
                 {
+                    newSession.Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, 4 * 1024);
+
                     newSession.ClientDataStream = new NetworkStream(newSession.Socket, true);
+
+                    newSession.Buffer = new byte[1];
+
+                    newSession.ClientDataStream
+                        .ReadAsync(newSession.Buffer, 0, newSession.Buffer.Length)
+                        .ContinueWith(OnReadContinueWithNewArray, newSession);
                 };
 
-            _SessionManager.OnDataAvailable +=
-                (session) =>
+        }
+
+        private void OnReadContinueWithNewArray(Task<int> t, object state)
+        {
+            if (t.IsFaulted || t.IsCanceled)
+                return;
+
+            var session = state as ClientSession ?? throw new InvalidOperationException();
+
+            var bytesRead = t.Result;
+            if (bytesRead == 1)
+            {
+                if (session.Buffer[0] == '*')
                 {
-                    RESP.ReadOneArray(session.ClientDataStream, out List<byte[]> data);
-                    return data;
-                };
+                    try
+                    {
+                        OnDataAvailable?.Invoke(session, RESP.ReadRespArray(session.ClientDataStream));
+                    }
+                    catch (System.IO.IOException)
+                    {
+                        return;
+                    }
+                    catch (System.Net.ProtocolViolationException)
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    return;
+                }
+            }
 
-            _SessionManager.OnRespArrayAvailable += _DisruptorRedis.OnDataAvailable;
+            session.ClientDataStream
+                .ReadAsync(session.Buffer, 0, session.Buffer.Length)
+                .ContinueWith(OnReadContinueWithNewArray, session);
         }
 
         public void Start()

@@ -17,6 +17,7 @@ namespace DisruptorNetRedis.Networking
             RemoteEndPoint = (IPEndPoint)socket.RemoteEndPoint;
         }
 
-        public Stream ClientDataStream = null; // normally a NetworkStream; for tests it's a MemoryStream.
+        public Stream ClientDataStream = null; // normally a NetworkStream; for tests it can be a MemoryStream.
+        public byte[] Buffer = null;
     }
 }

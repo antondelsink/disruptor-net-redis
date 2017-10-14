@@ -37,8 +37,8 @@ namespace DisruptorNetRedis.DisruptorRedis
                     () => new RingBufferSlot(),
                     1024,
                     TaskScheduler.Current,
-                    Disruptor.Dsl.ProducerType.Single,
-                    new BusySpinWaitStrategy());
+                    Disruptor.Dsl.ProducerType.Multi,
+                    new SleepingWaitStrategy());
         }
 
         public void Start()

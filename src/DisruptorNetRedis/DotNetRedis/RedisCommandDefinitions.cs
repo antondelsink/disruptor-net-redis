@@ -22,10 +22,6 @@ namespace DisruptorNetRedis
 
         PubSubCommands _cmdsPubSub = new PubSubCommands();
 
-        private SortedDictionary<string, Func<List<byte[]>, byte[]>> _commands = null;
-
-        private Func<List<byte[]>, Func<List<byte[]>, byte[]>>[] _commonCommands = null;
-
         public RedisCommandDefinitions(DotNetRedisServer server, StringsDatabase dbStrings, ListsDatabase dbLists, SetsDatabase dbSets)
         {
             _server = server;

@@ -1,14 +1,13 @@
-﻿using Disruptor;
-using DisruptorNetRedis.Databases;
+﻿using DisruptorNetRedis.Databases;
 using DisruptorNetRedis.DisruptorRedis;
 using DisruptorNetRedis.DotNetRedis;
-using DisruptorNetRedis.Networking;
 using DisruptorNetRedis.Tests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Threading;
 
 namespace DisruptorNetRedis.LongRunningTests
 {
@@ -45,6 +44,8 @@ namespace DisruptorNetRedis.LongRunningTests
                 _commandLogger);
 
             _dnr.Start();
+
+            Thread.Sleep(1000);
         }
 
         [ClassCleanup]
