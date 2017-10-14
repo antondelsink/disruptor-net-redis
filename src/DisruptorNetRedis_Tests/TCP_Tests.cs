@@ -19,10 +19,15 @@ namespace DisruptorNetRedis.LongRunningTests
         /// Round-trip the SET command from the client through TCP read & write, excluding server-side processing.
         /// </summary>
         /// <remarks>
+        /// Tested on Intel Xeon CPU E3-1505M v5 @ 2.80GHz, 4 Core(s), 8 Logical Processor(s)
         /// Once the test is running (max 5mins by default) launch either:
-        /// for a single client connecting: "redis-benchmark -c 1 -n 1000000 -P 100 -t SET -d 128 -r 8 -p 55001"
+        /// for a single client connecting, note response times should be less than 3ms:
+        ///     "redis-benchmark -c 1 -n 100000 -P 1 -t SET -d 128 -r 8 -p 55001"
+        ///     "redis-benchmark -c 1 -n 100000 -P 10 -t SET -d 128 -r 8 -p 55001"
+        ///     "redis-benchmark -c 1 -n 1000000 -P 100 -t SET -d 128 -r 8 -p 55001"
         ///     or
-        /// for 100 clients connecting simultaneously: "redis-benchmark -c 100 -n 10000000 -t SET -d 128 -r 8 -p 55001 -P 50"
+        /// for 100 clients connecting simultaneously, note throughput should be approx 230,000reqs/sec:
+        ///     "redis-benchmark -c 100 -n 1000000 -P 10 -t SET -d 128 -r 8 -p 55001"
         /// </remarks>
         [TestMethod]
         public void Test_TCP()
@@ -33,7 +38,7 @@ namespace DisruptorNetRedis.LongRunningTests
 
             sessionManager.OnNewSession += (ClientSession newSession) =>
             {
-                newSession.Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, 4 * 1024);
+                newSession.Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, 8 * 1024);
 
                 newSession.ClientDataStream = new NetworkStream(newSession.Socket, true);
 
@@ -91,6 +96,7 @@ namespace DisruptorNetRedis.LongRunningTests
         {
             var buffer = Constants.OK_SimpleStringAsByteArray;
             session.ClientDataStream.Write(buffer, 0, buffer.Length);
+            session.ClientDataStream.Flush();
         }
     }
 }
