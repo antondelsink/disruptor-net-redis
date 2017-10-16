@@ -40,15 +40,15 @@ Pull requests welcome! Just bear in mind this is for teaching, so there are limi
 
 **SADD**, **SCARD**, **SUNION**
 
-## Coming Soon - contributions welcome!
+## Coming Soon
 
 SETNX
 
-MSET, MGET,
+MSET, MGET, ...
 
 MULTI..{EXEC|DISCARD}
 
-EXPIRE, SETEX
+EXPIRE, SETEX, ...
 
 ...and lots more. Pull requests welcome!
 
