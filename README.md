@@ -26,27 +26,34 @@ See comments on each test method for appropriate command-line options for redis-
 # Learn
 
 Fork and edit!
-* Beginner: start with adding new Commands. Feel free to submit Pull requests!
-* Intermediate: establish a performance baseline with 'redis-benchmark', then replace and improve on an existing implementation!
-* Advanced: replace the TCP parsing code with Rx, TPL, Non-Blocking Sockets, or whatever I haven't thought of!
+* Beginner: start with adding new Redis Commands. Use the redis-benchmark tool to baseline and test your new commands. Use a profiler and aim for zero garbage.
+* Intermediate: establish a performance baseline with 'redis-benchmark' for a selection of commands, then replace and improve on an existing database class.
+* Advanced: replace the networking code with Rx, TPL, Non-Blocking Sockets, etc.
+
+Pull requests welcome! Just bear in mind this is for teaching, so there are limits to what I can include with regard complexity.
 
 ## Implemented Commands
-**SET**
-**GET**
 
-**LPUSH**
-**RPUSH**
-**LRANGE**
+**SET**, **GET**
 
-**SADD**
-**SCARD**
-**SUNION**
+**LPUSH**, **RPUSH**, **LRANGE**
+
+**SADD**, **SCARD**, **SUNION**
 
 ## Coming Soon - contributions welcome!
+
+SETNX
+
+MSET, MGET,
+
 MULTI..{EXEC|DISCARD}
-EXPIRE
+
+EXPIRE, SETEX
+
 ...and lots more. Pull requests welcome!
 
 ## Almost certainly not happening
+
 Blocking commands such as BLPOP/BRPOP.
-PubSub
+
+PubSub.
