@@ -21,16 +21,16 @@ namespace DisruptorNetRedis.LongRunningTests
         /// <remarks>
         /// Tested on Intel Xeon CPU E3-1505M v5 @ 2.80GHz, 4 Core(s), 8 Logical Processor(s)
         /// Once the test is running (max 5mins by default) launch either:
-        /// for a single client connecting, note response times should be less than 3ms:
+        /// for a single client connecting, noting response times less than 3ms, and 20,000reqs/s:
         ///     "redis-benchmark -c 1 -n 100000 -P 1 -t SET -d 128 -r 8 -p 55001"
         ///     "redis-benchmark -c 1 -n 100000 -P 10 -t SET -d 128 -r 8 -p 55001"
         ///     "redis-benchmark -c 1 -n 1000000 -P 100 -t SET -d 128 -r 8 -p 55001"
         ///     or
-        /// for 100 clients connecting simultaneously, note throughput should be approx 230,000reqs/sec:
+        /// for 100 clients connecting simultaneously, note throughput should be above 200,000reqs/sec:
         ///     "redis-benchmark -c 100 -n 1000000 -P 10 -t SET -d 128 -r 8 -p 55001"
         /// </remarks>
         [TestMethod]
-        public void Test_TCP()
+        public void Test_01_TCP_NoOp_RoundTrip_Run5mins()
         {
             var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55001);
 

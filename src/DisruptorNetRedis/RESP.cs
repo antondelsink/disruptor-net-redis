@@ -104,54 +104,6 @@ namespace DisruptorNetRedis
             return result;
         }
 
-        /// <summary>
-        /// Read Whole Array from Buffer; if BulkString longer than remaining Buffer, read synchronous!
-        /// </summary>
-        internal static void GetArray(Stream theStream, byte[] buffer, int ixBufferDataStart, int bufferDataLength, out List<byte[]> data, out int? ixNextArrayStart, out int? remainingDataLength)
-        {
-            int ix = ixBufferDataStart;
-
-            AdvanceIndexOnChar('*', buffer, ref ix);
-            int countArrayElements = GetInteger(buffer, ref ix);
-            AdvanceIndexOnChar('\r', buffer, ref ix);
-            AdvanceIndexOnChar('\n', buffer, ref ix);
-
-            data = new List<byte[]>(countArrayElements);
-
-            for (int nArrayElement = 0; nArrayElement < countArrayElements; nArrayElement++)
-            {
-                AdvanceIndexOnChar('$', buffer, ref ix);
-                var lenBulkString = GetInteger(buffer, ref ix);
-                AdvanceIndexOnChar('\r', buffer, ref ix);
-                AdvanceIndexOnChar('\n', buffer, ref ix);
-
-                if (lenBulkString + 2 <= (bufferDataLength - ix))
-                {
-                    // bulkstring fits completely within remaining buffer, including trailing \r\n
-
-                    var bulkString = new byte[lenBulkString];
-                    Array.Copy(buffer, ix, bulkString, 0, lenBulkString);
-                    ix += lenBulkString;
-                    AdvanceIndexOnChar('\r', buffer, ref ix);
-                    AdvanceIndexOnChar('\n', buffer, ref ix);
-
-                    data.Add(bulkString);
-                }
-                else
-                {
-                    // bulk string extends beyond current buffer
-
-                    throw new NotImplementedException();
-                }
-            }
-#if DEBUG
-            Array.Clear(buffer, ixBufferDataStart, ix);
-#endif
-
-            ixNextArrayStart = (ix < bufferDataLength) ? ix : (int?)null;
-            remainingDataLength = (ix < bufferDataLength) ? (bufferDataLength - ix) : (int?)null;
-        }
-
         private static void AdvanceIndexOnChar(char c, byte[] buffer, ref int ix)
         {
             var firstByte = buffer[ix];
@@ -249,8 +201,6 @@ namespace DisruptorNetRedis
             }
             return true;
         }
-
-
 
         internal static List<byte[]> ReadRespArray(Stream stream)
         {

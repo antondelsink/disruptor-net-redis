@@ -8,12 +8,16 @@ namespace DisruptorNetRedisConsole
     {
         static void Main(string[] args)
         {
-            var listenOn = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55001);
+            var port = 55001;
+            var listenOn = new IPEndPoint(IPAddress.Parse("127.0.0.1"), port);
 
             var s = new Server(listenOn);
             s.Start();
 
-            Console.Write("Server Running...");
+            Console.WriteLine("Server Running...");
+            Console.WriteLine($"Go ahead, run 'redis-benchmark -t SET -p {port}' and see what happens...");
+            Console.WriteLine();
+            Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
 
             s.Stop();

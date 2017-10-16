@@ -14,12 +14,13 @@ namespace DNR.Tests.RedisClients
         [TestMethod]
         public void Test_Sider_Connect_SET_GET()
         {
-            var ep = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 55001);
+            var port = 55002;
+            var ep = new IPEndPoint(IPAddress.Parse("127.0.0.1"), port);
 
             var s = new DisruptorNetRedis.Server(ep);
             s.Start();
             
-            var redis = new RedisClient();
+            var redis = new RedisClient(port:port);
 
             redis.Set("__key__", "__value__");
 

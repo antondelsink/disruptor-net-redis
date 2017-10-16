@@ -17,7 +17,7 @@ namespace DisruptorNetRedis.LongRunningTests
     public class DisruptorRedis_Tests_Init
     {
         [TestMethod]
-        public void Test_DisruptorRedis_Init()
+        public void Test_Init_DisruptorRedis()
         {
             var _core = new DotNetRedisServer();
             var _dbStrings = new StringsDatabase();

@@ -38,7 +38,7 @@ namespace DisruptorNetRedis.DisruptorRedis
                     1024,
                     TaskScheduler.Current,
                     Disruptor.Dsl.ProducerType.Multi,
-                    new BusySpinWaitStrategy());
+                    new SleepingWaitStrategy());
         }
 
         public void Start()

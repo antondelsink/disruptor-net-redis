@@ -54,8 +54,15 @@ namespace DisruptorNetRedis.LongRunningTests
             _dnr.Dispose();
         }
 
+        /// <summary>
+        /// Invoke the SET operation 1million times against the disruptor-based Redis server, excluding TCP (no network IO in this test).
+        /// </summary>
+        /// <remarks>
+        /// Tested on Intel Xeon CPU E3-1505M v5 @ 2.80GHz, 4 Core(s), 8 Logical Processor(s).
+        /// The test completes in approx 700ms on average, approx 1.4M requests per second.
+        /// </remarks>
         [TestMethod]
-        public void Test_DisruptorRedis_Perf__Set()
+        public void Test_03_DisruptorRedis_1million_SET()
         {
             var sw = Stopwatch.StartNew();
             foreach (var req in dataArray)

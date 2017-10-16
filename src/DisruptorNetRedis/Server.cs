@@ -16,7 +16,7 @@ namespace DisruptorNetRedis
 
         internal event Action<ClientSession, List<byte[]>> OnDataAvailable;
 
-        public Server(IPEndPoint listenOn)
+        internal Server(IPEndPoint listenOn, DisruptorRedis.DisruptorRedis disruptor = null)
         {
             var _commands =
                 new RedisCommandDefinitions(
@@ -25,7 +25,7 @@ namespace DisruptorNetRedis
                     new Databases.ListsDatabase(),
                     new Databases.SetsDatabase());
 
-            _DisruptorRedis =
+            _DisruptorRedis = disruptor ??
                 new DisruptorRedis.DisruptorRedis(
                     new RequestTranslator(),
                     new RequestParser(_commands),
@@ -49,7 +49,6 @@ namespace DisruptorNetRedis
                         .ReadAsync(newSession.Buffer, 0, newSession.Buffer.Length)
                         .ContinueWith(OnReadContinueWithNewArray, newSession);
                 };
-
         }
 
         private void OnReadContinueWithNewArray(Task<int> t, object state)
