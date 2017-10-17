@@ -100,6 +100,35 @@ namespace DisruptorNetRedis.Tests
             Check.That<byte[]>(response).ContainsExactly(Encoding.UTF8.GetBytes(RESP.AsRedisArray(RESP.AsRedisBulkString("b"),RESP.AsRedisBulkString("a"))));
         }
 
+        /// <summary>
+        /// https://redis.io/commands/lindex
+        /// </summary>
+        [TestMethod]
+        public void Test_Command_LIndex()
+        {
+            var key = new RedisKey("key");
+            var vals = new RedisValue[] { "a", "b", "c", "x", "y", "z" };
+
+            _dbLists.LPush(key, vals);
+
+            var msg =
+                RESP.AsRedisArray(
+                    RESP.AsRedisBulkString("LINDEX"),
+                    RESP.AsRedisBulkString("key"),
+                    RESP.AsRedisBulkString("0"));
+
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(msg));
+            stream.Seek(0, SeekOrigin.Begin);
+
+            RESP.ReadOneArray(stream, out List<byte[]> data);
+
+            var cmd = _commands.GetCommand(data);
+            var response = cmd(data);
+
+            Check.That(response).ContainsExactly(Encoding.UTF8.GetBytes(RESP.AsRedisBulkString("z")));
+        }
+
+
         [TestMethod]
         public void Test_PubSub_Subscribe()
         {

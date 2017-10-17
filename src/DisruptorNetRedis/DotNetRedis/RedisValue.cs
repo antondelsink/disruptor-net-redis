@@ -41,6 +41,22 @@ namespace DisruptorNetRedis
             return n;
         }
 
+        public bool IsInteger
+        {
+            get
+            {
+                if (_Value == null || _Value.Length == 0)
+                    return false;
+
+                foreach (var b in _Value)
+                {
+                    if (!char.IsDigit((char)b))
+                        return false;
+                }
+                return true;
+            }
+        }
+
         public override string ToString()
         {
             return Encoding.UTF8.GetString(_Value);

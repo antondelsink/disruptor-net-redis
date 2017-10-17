@@ -49,6 +49,7 @@ namespace DisruptorNetRedis
             if (RESP.StringCompare(cmd, "LPUSH")) return _cmdsLists.Exec_LPUSH;
             if (RESP.StringCompare(cmd, "RPUSH")) return _cmdsLists.Exec_RPUSH;
             if (RESP.StringCompare(cmd, "LRANGE")) return _cmdsLists.Exec_LRANGE;
+            if (RESP.StringCompare(cmd, "LINDEX")) return _cmdsLists.Exec_LINDEX;
 
             if (RESP.StringCompare(cmd, "SADD")) return _cmdsSets.Exec_SADD;
             if (RESP.StringCompare(cmd, "SCARD")) return _cmdsSets.Exec_SCARD;

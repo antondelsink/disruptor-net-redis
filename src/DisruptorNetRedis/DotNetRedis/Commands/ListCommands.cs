@@ -53,5 +53,23 @@ namespace DisruptorNetRedis.DotNetRedis.Commands
 
             return Constants.OK_SimpleStringAsByteArray;
         }
+
+        public byte[] Exec_LINDEX(List<byte[]> data)
+        {
+            if (data.Count != 3) // TODO: improve parsing error messages
+                return Constants.GenericError_SimpleStringAsByteArray;
+
+            var key = new RedisKey(data[1]);
+            var ix = new RedisValue(data[2]);
+
+            if (ix.IsInteger)
+            { 
+                var result = _db.LIndex(key, (int)ix);
+
+                return RESP.ToBulkStringAsByteArray(result);
+            }
+            else
+                return Constants.GenericError_SimpleStringAsByteArray;
+        }
     }
 }

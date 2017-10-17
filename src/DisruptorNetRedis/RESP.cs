@@ -75,6 +75,9 @@ namespace DisruptorNetRedis
 
         public static byte[] ToBulkStringAsByteArray(byte[] buffer)
         {
+            if (buffer == null)
+                return Constants.NULL_Binary;
+
             var prefix = Constants.BulkStringPrefixByteArray;
 
             var dataLen = buffer.Length;

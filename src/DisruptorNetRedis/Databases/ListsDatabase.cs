@@ -46,7 +46,6 @@ namespace DisruptorNetRedis.Databases
         /// <summary>
         /// https://redis.io/commands/lrange
         /// </summary>
-        /// <returns></returns>
         public List<RedisValue> LRange(RedisKey key, int start, int stop)
         {
             if (ListsDictionary.TryGetValue(key, out List<RedisValue> lst))
@@ -67,6 +66,28 @@ namespace DisruptorNetRedis.Databases
             else
             {
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// https://redis.io/commands/lindex
+        /// </summary>
+        public RedisValue? LIndex(RedisKey key, int ix)
+        {
+            // TODO: "When the value at key is not a list, an error is returned."
+
+            if (ListsDictionary.TryGetValue(key, out List<RedisValue> lst))
+            {
+                ix = (ix < 0) ? lst.Count + ix : ix;
+
+                if (ix >= 0 && ix < lst.Count)
+                    return lst[ix];
+                else
+                    return null; // "nil when index is out of range"
+            }
+            else // match behavior of redis-cli: return null if key does not exist.
+            {
+                return null; 
             }
         }
     }

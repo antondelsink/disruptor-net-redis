@@ -61,5 +61,20 @@ namespace DisruptorNetRedis.Tests.Databases
             Check.That(_db.LRange(key, -4, -3).Count).IsEqualTo(2);
             Check.That(_db.LRange(key, 3, 2).Count).IsEqualTo(0);
         }
+
+        /// <summary>
+        /// https://redis.io/commands/lindex
+        /// </summary>
+        [TestMethod]
+        public void Test_ListsDatabase_LIndex()
+        {
+            var key = new RedisKey("key");
+            var vals = new RedisValue[] { "a", "b", "c", "x", "y", "z" };
+
+            _db.LPush(key, vals);
+
+            Check.That(_db.LIndex(key, 0)).IsEqualTo("z");
+            Check.That(_db.LIndex(key, -1)).IsEqualTo("a");
+        }
     }
 }
