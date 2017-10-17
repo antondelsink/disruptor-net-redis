@@ -6,8 +6,8 @@ of the [LMAX Disruptor](https://github.com/LMAX-Exchange/disruptor).
 
 # Why
 
-Intended as a starting point for exploring performance of .NET Core related to
-Sockets, TCP stream parsing, Collections, etc.
+Intended as a starting point for learning about performance aspects of .NET Core related to
+Sockets, TCP stream parsing, Garbage Collection, built-in Collections, etc.
 
 # Thanks
 
@@ -30,13 +30,15 @@ Fork and edit!
 * Intermediate: establish a performance baseline with 'redis-benchmark' for a selection of commands, then replace and improve on an existing database class.
 * Advanced: replace the networking code with Rx, TPL, Non-Blocking Sockets, etc.
 
+See wiki for a minimal tutorial.
+
 Pull requests welcome! Just bear in mind this is for teaching, so there are limits to what I can include with regard complexity.
 
 ## Implemented Commands
 
 **SET**, **GET**
 
-**LPUSH**, **RPUSH**, **LRANGE**
+**LPUSH**, **RPUSH**, **LRANGE**, **LINDEX**
 
 **SADD**, **SCARD**, **SUNION**
 
