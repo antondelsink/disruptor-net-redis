@@ -1,38 +1,23 @@
-# What
+# What is it?
 
-Redis server written in C# for [.NET Core 2](https://github.com/dotnet/core),
+Experimental Redis server written in C# for [.NET Core 2](https://github.com/dotnet/core),
 using the [.NET port](https://github.com/disruptor-net/Disruptor-net)
 of the [LMAX Disruptor](https://github.com/LMAX-Exchange/disruptor).
 
-# Why
-
-Intended as a starting point for learning about performance aspects of .NET Core related to
-Sockets, TCP stream parsing, Garbage Collection, built-in Collections, etc.
-
-# Thanks
-
-Special thanks to the [Redis](http://www.redis.io) community and in particular
-Salvatore Sanfilippo aka [antirez](https://github.com/antirez) 
-as this would not have been a viable training approach without the 
-redis-benchmark utility and the easy-to-parse RESP (Redis Serialization Protocol).
+I'm using this for learning about performance; specifically Sockets, TCP stream parsing,
+Garbage Collection, built-in Collections, and of course the Disruptor.
 
 # Usage
 
 This is not a library. There is no NuGet package.
 
+When running the server, use the redis-cli or redis-benchmark client tools to connect.
+
 Fork/Clone and run any of the "unit tests" in the namespace DisruptorNetRedis.LongRunningTests.
 See comments on each test method for appropriate command-line options for redis-benchmark.
 
-# Learn
-
-Fork and edit!
-* Beginner: start with adding new Redis Commands. Use the redis-benchmark tool to baseline and test your new commands. Use a profiler and aim for zero garbage.
-* Intermediate: establish a performance baseline with 'redis-benchmark' for a selection of commands, then replace and improve on an existing database class.
-* Advanced: replace the networking code with Rx, TPL, Non-Blocking Sockets, etc.
-
-See wiki for a minimal tutorial.
-
-Pull requests welcome! Just bear in mind this is for teaching, so there are limits to what I can include with regard complexity.
+Pull requests welcome! Just bear in mind this is for learning & teaching,
+so there are limits to what I can include with regard complexity.
 
 ## Implemented Commands
 
@@ -59,3 +44,10 @@ EXPIRE, SETEX, ...
 Blocking commands such as BLPOP/BRPOP.
 
 PubSub.
+
+# Thanks
+
+Special thanks to the [Redis](http://www.redis.io) community and in particular
+Salvatore Sanfilippo aka [antirez](https://github.com/antirez) 
+as this would not have been a viable approach without the 
+redis-benchmark utility and the easy-to-parse RESP (Redis Serialization Protocol).
