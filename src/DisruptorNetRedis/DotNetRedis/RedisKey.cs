@@ -22,14 +22,14 @@ namespace DisruptorNetRedis
         }
 
         public static implicit operator RedisKey(byte[] buffer) => new RedisKey(buffer);
-        public static implicit operator byte[] (RedisKey key) => key._Key;
+        public static implicit operator byte[] (RedisKey key) => (key._Key == null) ? new byte[0] : key._Key;
 
         public static implicit operator RedisKey(string key) => new RedisKey(key);
         public static explicit operator string(RedisKey key) => key.ToString();
 
         public override string ToString()
         {
-            return Encoding.UTF8.GetString(_Key);
+            return (_Key == null) ? string.Empty : Encoding.UTF8.GetString(_Key);
         }
 
         public override bool Equals(object obj)

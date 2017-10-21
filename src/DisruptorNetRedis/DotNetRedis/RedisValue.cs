@@ -59,7 +59,7 @@ namespace DisruptorNetRedis
 
         public override string ToString()
         {
-            return Encoding.UTF8.GetString(_Value);
+            return (_Value == null) ? string.Empty : Encoding.UTF8.GetString(_Value);
         }
 
         public byte[] ToRedisBulkStringByteArray()
