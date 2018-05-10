@@ -28,18 +28,18 @@ namespace DisruptorNetRedis.Tests
         public void Test_RESP_AsRedisBulkString()
         {
             var result = RESP.AsRedisBulkString("ABC");
-            Check.That(result.StartsWith("$3"));
-            Check.That(result.Contains("ABS"));
-            Check.That(result.EndsWith(Environment.NewLine));
+            Check.That(result.StartsWith("$3")).IsTrue();
+            Check.That(result.Contains("ABC")).IsTrue();
+            Check.That(result.EndsWith(Environment.NewLine)).IsTrue();
         }
 
         [TestMethod]
         public void Test_RESP_AsRedisNumber()
         {
             var result = RESP.AsRedisNumber(5);
-            Check.That(result.StartsWith(":"));
-            Check.That(result.Contains("5"));
-            Check.That(result.EndsWith(Environment.NewLine));
+            Check.That(result.StartsWith(":")).IsTrue();
+            Check.That(result.Contains("5")).IsTrue();
+            Check.That(result.EndsWith(Environment.NewLine)).IsTrue();
         }
 
         [TestMethod]

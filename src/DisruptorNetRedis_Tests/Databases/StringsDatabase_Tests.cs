@@ -24,15 +24,15 @@ namespace DisruptorNetRedis.Tests.Databases
             var val = new RedisValue(new byte[] { 0x2 });
 
             var set_01_successful = _rs.Set(key__01, val);
-            Check.That(set_01_successful);
+            Check.That(set_01_successful).IsTrue();
             Check.That(_rs.StringsDictionary.Count).IsEqualTo(1);
 
             var again_set_01_successful = _rs.Set(key__01, val);
-            Check.That(again_set_01_successful);
+            Check.That(again_set_01_successful).IsTrue();
             Check.That(_rs.StringsDictionary.Count).IsEqualTo(1);
 
             var set_001_successful = _rs.Set(key_001, val);
-            Check.That(set_001_successful);
+            Check.That(set_001_successful).IsTrue();
             Check.That(_rs.StringsDictionary.Count).IsEqualTo(2);
         }
 
@@ -43,12 +43,12 @@ namespace DisruptorNetRedis.Tests.Databases
             var val = new RedisValue(new byte[] { 0x2 });
 
             var set_successful = _rs.Set(key, val);
-            Check.That(set_successful);
+            Check.That(set_successful).IsTrue();
             Check.That(_rs.StringsDictionary.Count).IsEqualTo(1);
 
             var testKey = new RedisKey(new byte[] { 0x1 });
             var get_successful = _rs.Get(key, out RedisValue result);
-            Check.That(get_successful);
+            Check.That(get_successful).IsTrue();
             Check.That<byte[]>(result).ContainsExactly((byte[])val);
         }
     }

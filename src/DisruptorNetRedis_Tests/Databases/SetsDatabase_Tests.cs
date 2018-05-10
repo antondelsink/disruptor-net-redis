@@ -24,7 +24,7 @@ namespace DisruptorNetRedis.Tests.Databases
             _db.SAdd(key, new RedisValue[] { val });
 
             Check.That(_db.SetsDictionary.Count).IsEqualTo(1);
-            Check.That(_db.SetsDictionary.ContainsKey(key));
+            Check.That(_db.SetsDictionary.ContainsKey(key)).IsTrue();
             Check.That(_db.SetsDictionary[key].Count).IsEqualTo(1);
             Check.That(_db.SetsDictionary[key].Contains(val));
         }
