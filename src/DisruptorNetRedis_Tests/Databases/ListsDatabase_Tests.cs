@@ -73,8 +73,8 @@ namespace DisruptorNetRedis.Tests.Databases
 
             _db.LPush(key, vals);
 
-            Check.That(_db.LIndex(key, 0)).IsEqualTo("z");
-            Check.That(_db.LIndex(key, -1)).IsEqualTo("a");
+            Check.That((string)_db.LIndex(key, 0)).IsEqualTo("z");
+            Check.That((string)_db.LIndex(key, -1)).IsEqualTo("a");
         }
     }
 }
