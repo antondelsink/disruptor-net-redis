@@ -6,8 +6,6 @@ namespace DisruptorNetRedis
 {
     internal static class Constants
     {
-        public static byte[] NEWLINE_Binary = Encoding.UTF8.GetBytes(Environment.NewLine);
-
         public const string OK = "OK";
         public const string OK_SimpleString = "+" + OK + "\r\n";
         public static byte[] OK_SimpleStringAsByteArray = Encoding.UTF8.GetBytes(OK_SimpleString);
@@ -20,10 +18,6 @@ namespace DisruptorNetRedis
         public const string UnknownCommandError_SimpleString = "-" + UnknownCommandError + "\r\n";
         public static byte[] UnknownCommandError_Binary = Encoding.UTF8.GetBytes(UnknownCommandError_SimpleString);
 
-        public const string NULL = "-1";
-        public const string NULL_BulkString = "$-1\r\n";
-        public static byte[] NULL_Binary = Encoding.UTF8.GetBytes(NULL_BulkString);
-
         public const string SET = "SET";
         public static byte[] SET_Binary = Encoding.UTF8.GetBytes(SET);
         public static byte[] set_Binary = Encoding.UTF8.GetBytes(SET.ToLower());
@@ -35,20 +29,6 @@ namespace DisruptorNetRedis
         public const string COMMAND = "COMMAND";
         public static byte[] COMMAND_Binary = Encoding.UTF8.GetBytes(COMMAND);
 
-        public const char RedisArrayPrefixChar = '*';
-        public const byte RedisArrayPrefixByte = (byte)'*';
-        public const string RedisArrayPrefixString = "*";
-        public static byte[] RedisArrayPrefixByteArray = Encoding.UTF8.GetBytes(RedisArrayPrefixString);
-
-        public const char BulkStringPrefixChar = '$';
-        public const byte BulkStringPrefixByte = (byte)'$';
-        public const string BulkStringPrefixString = "$";
-        public static byte[] BulkStringPrefixByteArray = Encoding.UTF8.GetBytes(BulkStringPrefixString);
-
-        public const string EmptyArray = "*0\r\n";
-        public static byte[] EmptyArrayAsByteArray = Encoding.UTF8.GetBytes(EmptyArray);
-
-        public static byte ZeroDigitByte = (byte)'0';
 
         public const string PING = "PING";
         public static byte[] PING_Binary = Encoding.UTF8.GetBytes(PING);

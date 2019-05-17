@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using RedisServerProtocol;
+
 namespace DisruptorNetRedis.DotNetRedis.Commands
 {
     internal class ListCommands
@@ -23,7 +25,7 @@ namespace DisruptorNetRedis.DotNetRedis.Commands
 
             var results = _db.LRange(key, start, stop);
 
-            return RESP.ToRedisArrayAsByteArray(results.ToArray());
+            return RedisValue.ToRedisArrayAsByteArray(results.ToArray());
         }
 
         public byte[] Exec_RPUSH(List<byte[]> data)

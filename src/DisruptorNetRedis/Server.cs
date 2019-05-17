@@ -6,6 +6,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
+using RedisServerProtocol;
+
 namespace DisruptorNetRedis
 {
     public class Server : IDisposable

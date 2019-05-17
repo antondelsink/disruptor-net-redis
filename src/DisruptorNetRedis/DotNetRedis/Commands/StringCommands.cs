@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using RedisServerProtocol;
+
 namespace DisruptorNetRedis.DotNetRedis.Commands
 {
     internal class StringCommands
@@ -53,7 +55,7 @@ namespace DisruptorNetRedis.DotNetRedis.Commands
                 ?
                 RESP.ToBulkStringAsByteArray(val)
                 :
-                Constants.NULL_Binary;
+                RESP.Constants.NULL_Binary;
 
             // TODO: if key NOT found, check if exists elsewhere, and if so return an error because GET should only be used on strings.
         }

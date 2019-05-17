@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+
+using RedisServerProtocol;
 
 namespace DisruptorNetRedis
 {
@@ -36,7 +39,7 @@ namespace DisruptorNetRedis
             int n = 0;
             foreach (var b in rv._Value)
             {
-                n = n * 10 + (b - Constants.ZeroDigitByte);
+                n = n * 10 + (b - RESP.Constants.ZeroDigitByte);
             }
             return n;
         }
@@ -68,6 +71,18 @@ namespace DisruptorNetRedis
             var suffix = Encoding.UTF8.GetBytes(Environment.NewLine);
 
             return Enumerable.Concat<byte>(Enumerable.Concat<byte>(prefix, _Value), suffix).ToArray();
+        }
+        public static byte[] ToRedisArrayAsByteArray(params RedisValue[] lst)
+        {
+            string prefix = "*" + lst.Length.ToString() + Environment.NewLine;
+
+            IEnumerable<byte> result = Encoding.UTF8.GetBytes(prefix);
+
+            foreach (RedisValue element in lst)
+            {
+                result = Enumerable.Concat<byte>(result, element.ToRedisBulkStringByteArray());
+            }
+            return result.ToArray();
         }
     }
 }

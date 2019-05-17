@@ -1,58 +1,77 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace DisruptorNetRedis
+namespace RedisServerProtocol
 {
-    internal static class RESP
+    public static class RESP
     {
-        public static string AsRedisArray(params string[] redisArrayElements)
+        public static class Constants
         {
-            string arr = "*" + redisArrayElements.Length.ToString() + Environment.NewLine;
-            foreach (string element in redisArrayElements)
-            {
-                arr += element;
-            }
-            return arr;
+            public static readonly string NewLine = "\r\n";
+
+            public static readonly byte[] NEWLINE_Binary = NewLine.ToUtf8Bytes();
+
+            public const string NULL = "-1";
+            public const string NULL_BulkString = "$-1\r\n";
+            public static byte[] NULL_Binary = NULL_BulkString.ToUtf8Bytes();
+
+            public const char RedisArrayPrefixChar = '*';
+            public const byte RedisArrayPrefixByte = (byte)'*';
+            public const string RedisArrayPrefixString = "*";
+            public static byte[] RedisArrayPrefixByteArray = RedisArrayPrefixString.ToUtf8Bytes();
+
+            public const char BulkStringPrefixChar = '$';
+            public const byte BulkStringPrefixByte = (byte)'$';
+            public const string BulkStringPrefixString = "$";
+            public static byte[] BulkStringPrefixByteArray = BulkStringPrefixString.ToUtf8Bytes();
+
+            public const string EmptyArray = "*0\r\n";
+            public static byte[] EmptyArrayAsByteArray = EmptyArray.ToUtf8Bytes();
+
+            public static byte ZeroDigitByte = (byte)'0';
         }
 
-        public static byte[] ToRedisArrayAsByteArray(params RedisValue[] lst)
+        /// <summary>
+        /// Concatenate all provided strings and prefix with a RESP Array Header.
+        /// </summary>
+        /// <param name="redisArrayElements">usually a BulkString; not modfied during concatenation</param>
+        /// <returns>RESP Array</returns>
+        public static string AsRedisArray(params string[] redisArrayElements)
         {
-            string prefix = "*" + lst.Length.ToString() + Environment.NewLine;
+            string redisArrayHeader = Constants.RedisArrayPrefixChar + redisArrayElements.Length.ToString() + Constants.NewLine;
 
-            IEnumerable<byte> result = Encoding.UTF8.GetBytes(prefix);
-
-            foreach (RedisValue element in lst)
+            var sb = new StringBuilder(redisArrayHeader, redisArrayHeader.Length + redisArrayElements.Length * 3); // min length 3 per element
+            foreach (string element in redisArrayElements)
             {
-                result = Enumerable.Concat<byte>(result, element.ToRedisBulkStringByteArray());
+                sb.Append(element);
             }
-            return result.ToArray();
+            return sb.ToString();
         }
 
         public static string AsRedisBulkString(string s)
         {
-            return "$" + s.Length.ToString() + Environment.NewLine + s + Environment.NewLine;
+            return "$" + s.Length.ToString() + Constants.NewLine + s + Constants.NewLine;
         }
 
         public static byte[] AsRedisBulkString(byte[] data)
         {
-            var prefix = Encoding.UTF8.GetBytes("$" + data.Length.ToString() + Environment.NewLine);
-            var suffix = Encoding.UTF8.GetBytes(Environment.NewLine);
+            var prefix = Encoding.UTF8.GetBytes("$" + data.Length.ToString() + Constants.NewLine);
+            var suffix = Encoding.UTF8.GetBytes(Constants.NewLine);
 
             return Enumerable.Concat<byte>(Enumerable.Concat<byte>(prefix, data), suffix).ToArray();
         }
 
         public static string AsRedisNumber(int i)
         {
-            return ":" + i.ToString() + Environment.NewLine;
+            return ":" + i.ToString() + Constants.NewLine;
         }
 
         public static string AsRedisSimpleString(string f)
         {
-            return "+" + f + Environment.NewLine;
+            return "+" + f + Constants.NewLine;
         }
 
         public static string CommandInfo(string commandName, int arity, string[] flags, int firstKeyPosition, int lastKeyPosition, int stepCount)
@@ -73,6 +92,19 @@ namespace DisruptorNetRedis
                     RESP.AsRedisNumber(stepCount));
         }
 
+        public static string ArrayOfBulkStringsFromStrings(params string[] s)
+        {
+            return RESP.AsRedisArray(RESP.AsRedisBulkStrings(s));
+        }
+        private static string AsRedisBulkStrings(params string[] arrs)
+        {
+            var sb = new StringBuilder();
+            foreach (var s in arrs)
+            {
+                sb.Append(s.ToRedisBulkString());
+            }
+            return sb.ToString();
+        }
         public static byte[] ToBulkStringAsByteArray(byte[] buffer)
         {
             if (buffer == null)
@@ -205,7 +237,7 @@ namespace DisruptorNetRedis
             return true;
         }
 
-        internal static List<byte[]> ReadRespArray(Stream stream)
+        public static List<byte[]> ReadRespArray(Stream stream)
         {
             int redisArrayLength = ReadInteger(stream);
 
@@ -223,7 +255,7 @@ namespace DisruptorNetRedis
             return data;
         }
 
-        internal static byte[] GetBulkString(int len, Stream s)
+        public static byte[] GetBulkString(int len, Stream s)
         {
             var buffer = new byte[len];
             s.Read(buffer, 0, len);
@@ -251,6 +283,31 @@ namespace DisruptorNetRedis
             if (stream.ReadByte() != (byte)'\n')
                 throw new System.Net.ProtocolViolationException($"during {nameof(ReadInteger)} an expected NewLine character was missing");
             return countArrayElements;
+        }
+
+        public static string ToRedisBulkString(this string s)
+        {
+            return RESP.AsRedisBulkString(s);
+        }
+
+        public static string ToRedisArray(this string s)
+        {
+            return RESP.AsRedisArray(s);
+        }
+
+        public static string ToRedisArray(this string[] s)
+        {
+            return RESP.AsRedisArray(s);
+        }
+
+        public static string[] ToRedisBulkStrings(this string[] dotNetStrings)
+        {
+            return dotNetStrings.Select(s => s.ToRedisBulkString()).ToArray();
+        }
+
+        private static byte[] ToUtf8Bytes(this string s)
+        {
+            return Encoding.UTF8.GetBytes(s);
         }
     }
 }

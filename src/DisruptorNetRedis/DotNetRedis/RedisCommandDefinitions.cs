@@ -6,6 +6,8 @@ using DisruptorNetRedis.DotNetRedis;
 using DisruptorNetRedis.Databases;
 using DisruptorNetRedis.DotNetRedis.Commands;
 
+using RedisServerProtocol;
+
 namespace DisruptorNetRedis
 {
     internal class RedisCommandDefinitions

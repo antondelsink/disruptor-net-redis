@@ -19,4 +19,8 @@
     <PackageReference Include="Disruptor" Version="3.4.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\RESP\RESP.csproj" />
+  </ItemGroup>
+
 </Project>

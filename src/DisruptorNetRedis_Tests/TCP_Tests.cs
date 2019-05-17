@@ -10,6 +10,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using RedisServerProtocol;
+
 namespace DisruptorNetRedis.LongRunningTests
 {
     [TestClass]

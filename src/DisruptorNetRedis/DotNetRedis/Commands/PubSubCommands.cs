@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 
+using RedisServerProtocol;
+
 namespace DisruptorNetRedis.DotNetRedis.Commands
 {
     internal class PubSubCommands

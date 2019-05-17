@@ -3,8 +3,9 @@ using NFluent;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net.Sockets;
 using System.Text;
+
+using RedisServerProtocol;
 
 namespace DisruptorNetRedis.Tests
 {
@@ -27,44 +28,47 @@ namespace DisruptorNetRedis.Tests
         [TestMethod]
         public void Test_RESP_AsRedisBulkString()
         {
-            var result = RESP.AsRedisBulkString("ABC");
-            Check.That(result.StartsWith("$3")).IsTrue();
-            Check.That(result.Contains("ABC")).IsTrue();
-            Check.That(result.EndsWith(Environment.NewLine)).IsTrue();
+            var result = "ABC".ToRedisBulkString();
+
+            Check.That(result).Contains("$3");
+            Check.That(result).Contains("ABC");
+            Check.That(result).EndsWith(RESP.Constants.NewLine);
+            Check.That(result.Substring(2, 2)).IsEqualTo(RESP.Constants.NewLine);
+            Check.That(result.Length).IsEqualTo(9);
         }
 
         [TestMethod]
         public void Test_RESP_AsRedisNumber()
         {
             var result = RESP.AsRedisNumber(5);
-            Check.That(result.StartsWith(":")).IsTrue();
-            Check.That(result.Contains("5")).IsTrue();
-            Check.That(result.EndsWith(Environment.NewLine)).IsTrue();
+
+            Check.That(result).StartsWith(":");
+            Check.That(result).Contains("5");
+            Check.That(result).EndsWith(RESP.Constants.NewLine);
+            Check.That(result.Length).IsEqualTo(4);
         }
 
         [TestMethod]
         public void Test_RESP_ReadOneBulkArray()
         {
-            var buffer = Encoding.UTF8.GetBytes("*1\r\n$7\r\nCOMMAND\r\n");
+            var stream = "COMMAND".ToRedisBulkString().ToRedisArray().ToUtf8Bytes().ToMemoryStream();
 
-            var stream = new MemoryStream();
-            stream.Write(buffer, 0, buffer.Length);
-            stream.Seek(0, SeekOrigin.Begin);
-            
             RESP.ReadOneArray(stream, out List<byte[]> data);
 
             Check.That(data.Count).IsEqualTo(1);
             Check.That(data[0]).ContainsExactly(Encoding.UTF8.GetBytes("COMMAND"));
         }
 
+
         [TestMethod]
         public void Test_RESP_ReadOneBulkArray_x3()
         {
-            var buffer = Encoding.UTF8.GetBytes("*1\r\n$7\r\nCOMMAND\r\n*3\r\n$3\r\nSET\r\n$1\r\nk\r\n$1\r\nv\r\n*2\r\n$3\r\nGET\r\n$1\r\nk\r\n");
+            var respCOMMAND = "COMMAND".ToRedisBulkString().ToRedisArray();
 
-            var stream = new MemoryStream();
-            stream.Write(buffer, 0, buffer.Length);
-            stream.Seek(0, SeekOrigin.Begin);
+            var respSET = new string[] { "SET", "k", "v" }.ToRedisBulkStrings().ToRedisArray();
+            var respGET = new string[] { "GET", "k" }.ToRedisBulkStrings().ToRedisArray();
+
+            var stream = (respCOMMAND + respSET + respGET).ToUtf8Bytes().ToMemoryStream();
 
             List<byte[]> data;
             RESP.ReadOneArray(stream, out data);
@@ -87,6 +91,21 @@ namespace DisruptorNetRedis.Tests
             string s = "LPUSH";
 
             Check.That(RESP.StringCompare(b, s)).IsTrue();
+        }
+    }
+    internal static class Test_Helper_Extensions
+    { 
+        public static byte[] ToUtf8Bytes(this string s)
+        {
+            return Encoding.UTF8.GetBytes(s);
+        }
+
+        public static Stream ToMemoryStream(this byte[] buffer)
+        {
+            var stream = new MemoryStream();
+            stream.Write(buffer, 0, buffer.Length);
+            stream.Seek(0, SeekOrigin.Begin);
+            return stream;
         }
     }
 }

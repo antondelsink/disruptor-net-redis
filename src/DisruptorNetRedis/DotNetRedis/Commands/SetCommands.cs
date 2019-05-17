@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using RedisServerProtocol;
+
 namespace DisruptorNetRedis.DotNetRedis.Commands
 {
     internal class SetCommands
@@ -22,7 +24,7 @@ namespace DisruptorNetRedis.DotNetRedis.Commands
 
             var result = _db.SUnion(keys.Skip(1).ToArray());
 
-            return RESP.ToRedisArrayAsByteArray(result.ToArray());
+            return RedisValue.ToRedisArrayAsByteArray(result.ToArray());
         }
 
         public byte[] Exec_SCARD(List<byte[]> data)

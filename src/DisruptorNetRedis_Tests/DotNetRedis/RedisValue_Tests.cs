@@ -2,6 +2,8 @@
 using NFluent;
 using System.Text;
 
+using RedisServerProtocol;
+
 namespace DisruptorNetRedis.Tests
 {
     [TestClass]
