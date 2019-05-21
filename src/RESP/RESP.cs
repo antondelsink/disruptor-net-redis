@@ -53,7 +53,28 @@ namespace RedisServerProtocol
 
         public static string AsRedisBulkString(string s)
         {
-            return "$" + s.Length.ToString() + Constants.NewLine + s + Constants.NewLine;
+            switch (s.Length)
+            {
+                case int n when n >= 1 && n <= 9:
+
+                    Span<char> tmp = stackalloc char[n + 6];
+
+                    tmp[3] = tmp[n + 6 - 1] = '\n';
+                    tmp[2] = tmp[n + 6 - 2] = '\r';
+
+                    tmp[0] = '$';
+                    tmp[1] = (char)(n + 48);
+
+                    for (int ix = 4; ix < tmp.Length - 2; ix++)
+                    {
+                        tmp[ix] = s[ix - 4];
+                    }
+
+                    return new string(tmp);
+
+                default:
+                    return "$" + s.Length.ToString() + Constants.NewLine + s + Constants.NewLine;
+            }
         }
 
         public static byte[] AsRedisBulkString(byte[] data)
@@ -101,7 +122,7 @@ namespace RedisServerProtocol
             var sb = new StringBuilder();
             foreach (var s in arrs)
             {
-                sb.Append(s.ToRedisBulkString());
+                sb.Append(RESP.AsRedisBulkString(s));
             }
             return sb.ToString();
         }

@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DisruptorNetRedis_Tests", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DisruptorNetRedisConsole", "DisruptorNetRedisConsole\DisruptorNetRedisConsole.csproj", "{C0F6A3CC-B295-4A52-9F83-73E11D9F6D1F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RESP", "RESP\RESP.csproj", "{27027E93-6A54-46A7-ADB2-2E47AD3C0E95}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RESP", "RESP\RESP.csproj", "{27027E93-6A54-46A7-ADB2-2E47AD3C0E95}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RESP_Benchmarks", "RESP_Benchmarks\RESP_Benchmarks.csproj", "{61D6FC4D-CB17-4A05-B9F4-074909BB7A7D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{27027E93-6A54-46A7-ADB2-2E47AD3C0E95}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{27027E93-6A54-46A7-ADB2-2E47AD3C0E95}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{27027E93-6A54-46A7-ADB2-2E47AD3C0E95}.Release|Any CPU.Build.0 = Release|Any CPU
+		{61D6FC4D-CB17-4A05-B9F4-074909BB7A7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61D6FC4D-CB17-4A05-B9F4-074909BB7A7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61D6FC4D-CB17-4A05-B9F4-074909BB7A7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61D6FC4D-CB17-4A05-B9F4-074909BB7A7D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
