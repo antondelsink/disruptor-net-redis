@@ -93,7 +93,7 @@ namespace DisruptorNetRedis.Tests
             var respCOMMAND = "COMMAND".ToRedisBulkString().ToUtf8Bytes();
             var buffer = new ReadOnlySequence<byte>(respCOMMAND);
 
-            var len = RESP.ReadNumber(buffer.Slice(1));
+            var len = RESP.ReadNumberUpToEOL(buffer.Slice(1));
             Check.That(len).IsEqualTo(7);
 
             int ixStart = (len < 10 ? 4 : len < 100 ? 5 : len < 1000 ? 6 : 3 + len.ToString().Length);

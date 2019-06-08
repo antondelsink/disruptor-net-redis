@@ -118,26 +118,63 @@ namespace RedisServerProtocol
         /// <summary>
         /// Read a decimal integer from a multi-segment sequence of read-only memory.
         /// </summary>
-        /// <remarks>
-        /// No validation!
-        /// Does not check for minus sign.
-        /// </remarks>
         public static int ReadNumber(ReadOnlySequence<byte> buffer)
         {
-            if (buffer.IsSingleSegment &&
-                buffer.First.Length > 1 &&
-                buffer.First.Span[1] == (byte)'\r')
+            // TODO: Minus sign for NULL
+
+            if (buffer.Length == 1)
                 return (buffer.First.Span[0] - Constants.ZeroDigitByte);
 
             int result = 0;
-            foreach (var segment in buffer)
+            if (buffer.IsSingleSegment)
             {
-                foreach (byte b in segment.Span)
+                foreach (byte b in buffer.First.Span)
                 {
-                    if (b != (byte)'\r')
+                    result = result * 10 + (b - Constants.ZeroDigitByte);
+                }
+            }
+            else
+            {
+                foreach (var segment in buffer)
+                {
+                    foreach (byte b in segment.Span)
+                    {
                         result = result * 10 + (b - Constants.ZeroDigitByte);
-                    else
+                    }
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Read a decimal integer from a multi-segment sequence of read-only memory terminated by '\r'.
+        /// </summary>
+        public static int ReadNumberUpToEOL(ReadOnlySequence<byte> buffer)
+        {
+            // TODO: Minus sign for NULL
+
+            int result = 0;
+            if (buffer.IsSingleSegment)
+            {
+                foreach (byte b in buffer.First.Span)
+                {
+                    if (b == (byte)'\r')
                         return result;
+
+                    result = result * 10 + (b - Constants.ZeroDigitByte);
+                }
+            }
+            else
+            {
+                foreach (var segment in buffer)
+                {
+                    foreach (byte b in segment.Span)
+                    {
+                        if (b == (byte)'\r')
+                            return result;
+
+                        result = result * 10 + (b - Constants.ZeroDigitByte);
+                    }
                 }
             }
             return result;

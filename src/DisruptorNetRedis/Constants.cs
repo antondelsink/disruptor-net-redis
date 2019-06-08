@@ -8,7 +8,8 @@ namespace DisruptorNetRedis
     {
         public const string OK = "OK";
         public const string OK_SimpleString = "+" + OK + "\r\n";
-        public static byte[] OK_SimpleStringAsByteArray = Encoding.UTF8.GetBytes(OK_SimpleString);
+        public static readonly byte[] OK_SimpleStringAsByteArray = Encoding.UTF8.GetBytes(OK_SimpleString);
+        public static readonly ReadOnlyMemory<byte> OK_ReadOnlyMemory = OK_SimpleStringAsByteArray.AsMemory();
 
         public const string GenericError = "Error";
         public const string GenericError_SimpleString = "-" + GenericError + "\r\n";

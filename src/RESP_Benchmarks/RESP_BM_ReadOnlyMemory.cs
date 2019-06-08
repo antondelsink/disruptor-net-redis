@@ -22,8 +22,7 @@ namespace RESP_Benchmarks
         [Benchmark]
         public void BM_RESP_ReadNumber()
         {
-            var result = RESP.ReadNumber(Buffer.Slice(1));
+            _ = RESP.ReadNumberUpToEOL(Buffer.Slice(1));
         }
-
     }
 }
