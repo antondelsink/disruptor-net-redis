@@ -7,7 +7,7 @@ namespace RESP_Benchmarks
     {
         public static void Main()
         {
-            var summary = BenchmarkRunner.Run<RESP_BM>();
+            var summary = BenchmarkRunner.Run<RESP_BM_ReadOnlyMemory>();
         }
     }
 }

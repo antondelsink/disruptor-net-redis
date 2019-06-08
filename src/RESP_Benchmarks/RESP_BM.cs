@@ -1,14 +1,10 @@
 ﻿using BenchmarkDotNet.Attributes;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 using RedisServerProtocol;
 
 namespace RESP_Benchmarks
 {
     [CoreJob]
-    //[RPlotExporter, RankColumn]
     public class RESP_BM
     {
         [Params(3, 5, 10)]
@@ -23,7 +19,7 @@ namespace RESP_Benchmarks
         }
 
         [Benchmark]
-        public void Test001()
+        public void BM_RESP_AsRedisBulkString()
         {
             var result = RESP.AsRedisBulkString(text);
         }

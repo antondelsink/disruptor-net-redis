@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 
 using RedisServerProtocol;
+using System.Buffers;
 
 namespace DisruptorNetRedis.Tests
 {
@@ -30,10 +31,10 @@ namespace DisruptorNetRedis.Tests
         {
             var result = "ABC".ToRedisBulkString();
 
-            Check.That(result).Contains("$3");
-            Check.That(result).Contains("ABC");
-            Check.That(result).EndsWith(RESP.Constants.NewLine);
+            Check.That(result).StartsWith("$3");
             Check.That(result.Substring(2, 2)).IsEqualTo(RESP.Constants.NewLine);
+            Check.That(result.Substring(4, 3)).IsEqualTo("ABC");
+            Check.That(result).EndsWith(RESP.Constants.NewLine);
             Check.That(result.Length).IsEqualTo(9);
         }
 
@@ -43,7 +44,7 @@ namespace DisruptorNetRedis.Tests
             var result = RESP.AsRedisNumber(5);
 
             Check.That(result).StartsWith(":");
-            Check.That(result).Contains("5");
+            Check.That(result.Substring(1,1)).IsEqualTo("5");
             Check.That(result).EndsWith(RESP.Constants.NewLine);
             Check.That(result.Length).IsEqualTo(4);
         }
@@ -58,7 +59,6 @@ namespace DisruptorNetRedis.Tests
             Check.That(data.Count).IsEqualTo(1);
             Check.That(data[0]).ContainsExactly(Encoding.UTF8.GetBytes("COMMAND"));
         }
-
 
         [TestMethod]
         public void Test_RESP_ReadOneBulkArray_x3()
@@ -78,10 +78,28 @@ namespace DisruptorNetRedis.Tests
             RESP.ReadOneArray(stream, out data);
             Check.That(data.Count).IsEqualTo(3);
             Check.That(data[0]).ContainsExactly(Encoding.UTF8.GetBytes("SET"));
+            Check.That(data[1]).ContainsExactly(Encoding.UTF8.GetBytes("k"));
+            Check.That(data[2]).ContainsExactly(Encoding.UTF8.GetBytes("v"));
 
             RESP.ReadOneArray(stream, out data);
             Check.That(data.Count).IsEqualTo(2);
             Check.That(data[0]).ContainsExactly(Encoding.UTF8.GetBytes("GET"));
+            Check.That(data[1]).ContainsExactly(Encoding.UTF8.GetBytes("k"));
+        }
+
+        [TestMethod]
+        public void Test_RESP_ReadBulkString_fromReadOnlySequence()
+        {
+            var respCOMMAND = "COMMAND".ToRedisBulkString().ToUtf8Bytes();
+            var buffer = new ReadOnlySequence<byte>(respCOMMAND);
+
+            var len = RESP.ReadNumber(buffer.Slice(1));
+            Check.That(len).IsEqualTo(7);
+
+            int ixStart = (len < 10 ? 4 : len < 100 ? 5 : len < 1000 ? 6 : 3 + len.ToString().Length);
+            var data = buffer.Slice(ixStart, len);
+            Check.That(data.Length).IsEqualTo(7);
+            Check.That(data.ToArray()).IsSubSetOf(respCOMMAND);
         }
 
         [TestMethod]

@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 
 namespace RedisServerProtocol
@@ -111,6 +113,34 @@ namespace RedisServerProtocol
                     RESP.AsRedisNumber(firstKeyPosition),
                     RESP.AsRedisNumber(lastKeyPosition),
                     RESP.AsRedisNumber(stepCount));
+        }
+
+        /// <summary>
+        /// Read a decimal integer from a multi-segment sequence of read-only memory.
+        /// </summary>
+        /// <remarks>
+        /// No validation!
+        /// Does not check for minus sign.
+        /// </remarks>
+        public static int ReadNumber(ReadOnlySequence<byte> buffer)
+        {
+            if (buffer.IsSingleSegment &&
+                buffer.First.Length > 1 &&
+                buffer.First.Span[1] == (byte)'\r')
+                return (buffer.First.Span[0] - Constants.ZeroDigitByte);
+
+            int result = 0;
+            foreach (var segment in buffer)
+            {
+                foreach (byte b in segment.Span)
+                {
+                    if (b != (byte)'\r')
+                        result = result * 10 + (b - Constants.ZeroDigitByte);
+                    else
+                        return result;
+                }
+            }
+            return result;
         }
 
         public static string ArrayOfBulkStringsFromStrings(params string[] s)
@@ -326,7 +356,7 @@ namespace RedisServerProtocol
             return dotNetStrings.Select(s => s.ToRedisBulkString()).ToArray();
         }
 
-        private static byte[] ToUtf8Bytes(this string s)
+        public static byte[] ToUtf8Bytes(this string s)
         {
             return Encoding.UTF8.GetBytes(s);
         }
