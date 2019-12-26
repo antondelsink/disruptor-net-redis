@@ -1,6 +1,6 @@
 # What is it?
 
-Experimental Redis server written in C# for [.NET Core 2](https://github.com/dotnet/core),
+Experimental Redis server written in C# for [.NET Core](https://github.com/dotnet/core),
 using the [.NET port](https://github.com/disruptor-net/Disruptor-net)
 of the [LMAX Disruptor](https://github.com/LMAX-Exchange/disruptor).
 
